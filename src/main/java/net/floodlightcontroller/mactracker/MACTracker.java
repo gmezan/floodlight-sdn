@@ -105,6 +105,6 @@ public class MACTracker implements IOFMessageListener, IFloodlightModule, IMACTr
 
     @Override
     public List<MACTrackerDto> getMACTrackerDto() {
-        return null;
+        return macTrackerDtoList;
     }
 }
