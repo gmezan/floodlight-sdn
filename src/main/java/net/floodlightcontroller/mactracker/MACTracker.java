@@ -8,24 +8,25 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
+import net.floodlightcontroller.restserver.IRestApiService;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFType;
 
-import net.floodlightcontroller.core.IFloodlightProviderService;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.Set;
+
 import net.floodlightcontroller.packet.Ethernet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MACTracker implements IOFMessageListener, IFloodlightModule {
+public class MACTracker implements IOFMessageListener, IFloodlightModule, IMACTrackerService {
 
     protected IFloodlightProviderService floodlightProvider;
     protected Set<Long> macAddresses;
     protected static Logger logger;
+
+    protected List<MACTrackerDto> macTrackerDtoList;
+    protected IRestApiService restApi;
 
     @Override
     public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
@@ -36,6 +37,10 @@ public class MACTracker implements IOFMessageListener, IFloodlightModule {
         Long sourceMACHash = eth.getSourceMACAddress().getLong();
         if (!macAddresses.contains(sourceMACHash)) {
             macAddresses.add(sourceMACHash);
+            // My code:
+            macTrackerDtoList.add(
+                    new MACTrackerDto(eth.getSourceMACAddress().toString(), sw.getId().toString())
+            );
             logger.info("MAC Address: {} seen on switch: {}",
                     eth.getSourceMACAddress().toString(),
                     sw.getId().toString());
@@ -60,12 +65,16 @@ public class MACTracker implements IOFMessageListener, IFloodlightModule {
 
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
-        return null;
+        Collection<Class<? extends IFloodlightService>> l = new ArrayList<Class<? extends IFloodlightService>>();
+        l.add(IMACTrackerService.class);
+        return l;
     }
 
     @Override
     public Map<Class<? extends IFloodlightService>, IFloodlightService> getServiceImpls() {
-        return null;
+        Map<Class<? extends IFloodlightService>, IFloodlightService> m = new HashMap<Class<? extends IFloodlightService>, IFloodlightService>();
+        m.put(IMACTrackerService.class, this);
+        return m;
     }
 
     @Override
@@ -73,6 +82,7 @@ public class MACTracker implements IOFMessageListener, IFloodlightModule {
         Collection<Class<? extends IFloodlightService>> l =
                 new ArrayList<Class<? extends IFloodlightService>>();
         l.add(IFloodlightProviderService.class);
+        l.add(IRestApiService.class);
         return l;
     }
 
@@ -80,11 +90,21 @@ public class MACTracker implements IOFMessageListener, IFloodlightModule {
     public void init(FloodlightModuleContext context) throws FloodlightModuleException {
         floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
         macAddresses = new ConcurrentSkipListSet<Long>();
+        // My code
+        macTrackerDtoList = new ArrayList<>();
+        restApi = context.getServiceImpl(IRestApiService.class);
+        //
         logger = LoggerFactory.getLogger(MACTracker.class);
     }
 
     @Override
     public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
         floodlightProvider.addOFMessageListener(OFType.PACKET_IN, this);
+        restApi.addRestletRoutable(new MACTrackerWebRoutable());
+    }
+
+    @Override
+    public List<MACTrackerDto> getMACTrackerDto() {
+        return null;
     }
 }
