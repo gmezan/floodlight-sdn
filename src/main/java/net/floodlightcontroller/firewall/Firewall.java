@@ -697,8 +697,8 @@ IFloodlightModule {
 
 		//actionList.add(action.build());
 
-		flow.setHardTimeout(30);
-		flow.setIdleTimeout(0);
+		flow.setHardTimeout(0);
+		flow.setIdleTimeout(30);
 		//flow.setActions(actionList);
 		flow.setMatch(match.build());
 		flow.setPriority(32767);
