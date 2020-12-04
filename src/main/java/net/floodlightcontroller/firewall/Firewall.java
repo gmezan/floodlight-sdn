@@ -18,7 +18,12 @@
 package net.floodlightcontroller.firewall;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import net.floodlightcontroller.packet.*;
 import org.projectfloodlight.openflow.protocol.*;
@@ -37,6 +42,8 @@ import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.devicemanager.IDeviceService;
 
+import java.util.ArrayList;
+
 import net.floodlightcontroller.restserver.IRestApiService;
 import net.floodlightcontroller.routing.IRoutingDecision;
 import net.floodlightcontroller.routing.RoutingDecision;
@@ -46,8 +53,6 @@ import net.floodlightcontroller.storage.StorageException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import net.floodlightcontroller.util.OFMessageDamper;
 
 /**
  * Stateless firewall implemented as a Google Summer of Code project.
@@ -529,7 +534,7 @@ IFloodlightModule {
 
 		//TODO: Lab4 Gustavo
 
-		OFMessageDamper messageDamper = new OFMessageDamper(10, new HashSet<OFType>(), 10000);
+
 		///Validamos si es IPv4
 		logger.info("My Code FOR LABBBBBBBBBBBBBBBBBBBB");
 		if(eth.getEtherType().equals(EthType.IPv4)) {
@@ -576,7 +581,7 @@ IFloodlightModule {
 							logger.trace("Writing flood PacketOut switch={} packet-in={} packet-out={}",
 									new Object[] {sw, pi, po.build()});
 						}
-						messageDamper.write(sw, po.build());
+						if (!sw.write(po.build())) throw new IOException();
 					} catch (IOException e) {
 						logger.error("Failure writing PacketOut switch={} packet-in={} packet-out={}",
 								new Object[] {sw, pi, po.build(), e});
