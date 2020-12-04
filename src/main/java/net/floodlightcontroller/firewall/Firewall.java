@@ -690,15 +690,14 @@ IFloodlightModule {
 		match.setExact(MatchField.ETH_TYPE, eth.getEtherType());
 		match.setExact(MatchField.IP_PROTO, IpProtocol.TCP);
 		match.setExact(MatchField.TCP_DST, tcp.getDestinationPort());
-		match.setExact(MatchField.TCP_SRC, tcp.getSourcePort());
 		match.setExact(MatchField.IPV4_DST, ip.getDestinationAddress());
 		match.setExact(MatchField.IPV4_SRC, ip.getSourceAddress());
-		//match.setExact(MatchField.BSN_INNER_ETH_DST, eth.getDestinationMACAddress());
-		//match.setExact(MatchField.BSN_INNER_ETH_SRC, eth.getSourceMACAddress());
+		match.setExact(MatchField.ETH_DST, eth.getDestinationMACAddress());
+		match.setExact(MatchField.ETH_SRC, eth.getSourceMACAddress());
 
 		//actionList.add(action.build());
 
-		flow.setHardTimeout(10000);
+		flow.setHardTimeout(30);
 		flow.setIdleTimeout(0);
 		//flow.setActions(actionList);
 		flow.setMatch(match.build());
