@@ -12,7 +12,6 @@ import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import net.floodlightcontroller.statistics.lab4package.NodeFlowTuple;
 import org.projectfloodlight.openflow.protocol.*;
 import org.projectfloodlight.openflow.protocol.match.Match;
 import org.projectfloodlight.openflow.protocol.ver13.OFMeterSerializerVer13;
@@ -55,6 +54,7 @@ public class StatisticsCollector implements IFloodlightModule, IStatisticsServic
 	private static final long MILLIS_PER_SEC = 1000;
 	
 	private static final String INTERVAL_PORT_STATS_STR = "collectionIntervalPortStatsSeconds";
+	private static final String INTERVAL_FLOW_STATS_STR = "collectionIntervalFlowStatsSeconds";
 	private static final String ENABLED_STR = "enable";
 
 	private static final HashMap<NodePortTuple, SwitchPortBandwidth> portStats = new HashMap<NodePortTuple, SwitchPortBandwidth>();
@@ -286,6 +286,15 @@ public class StatisticsCollector implements IFloodlightModule, IStatisticsServic
 			}
 		}
 		log.info("Port statistics collection interval set to {}s", portStatsInterval);
+
+		if (config.containsKey(INTERVAL_FLOW_STATS_STR)) {
+			try {
+				flowStatsInterval = Integer.parseInt(config.get(INTERVAL_FLOW_STATS_STR).trim());
+			} catch (Exception e) {
+				log.error("Could not parse '{}'. Using default of {}", INTERVAL_FLOW_STATS_STR, flowStatsInterval);
+			}
+		}
+		log.info("Flow statistics collection interval set to {}s", flowStatsInterval);
 	}
 
 	@Override
