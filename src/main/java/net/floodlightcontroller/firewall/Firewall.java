@@ -693,10 +693,9 @@ IFloodlightModule {
 		match.setExact(MatchField.TCP_SRC, tcp.getSourcePort());
 		match.setExact(MatchField.IPV4_DST, ip.getDestinationAddress());
 		match.setExact(MatchField.IPV4_SRC, ip.getSourceAddress());
-		match.setExact(MatchField.BSN_INNER_ETH_DST, eth.getDestinationMACAddress());
-		match.setExact(MatchField.BSN_INNER_ETH_SRC, eth.getSourceMACAddress());
+		//match.setExact(MatchField.BSN_INNER_ETH_DST, eth.getDestinationMACAddress());
+		//match.setExact(MatchField.BSN_INNER_ETH_SRC, eth.getSourceMACAddress());
 		action.setMaxLen(0xffFFffFF);
-		action.setPort(OFPort.ZERO);
 		actionList.add(action.build());
 
 		flow.setBufferId(OFBufferId.NO_BUFFER);
