@@ -541,7 +541,7 @@ IFloodlightModule {
 				TCP tcp = (TCP) ip.getPayload();
 				///Validamos si el FLAG es SYN 0x02
 				if(tcp.getFlags() ==  (short) 0x02){
-					logger.info("New TCP connection found, rejecting");
+					logger.trace("New TCP connection found, rejecting");
 					///Elaboramos el paquete a responder, desde la capa superior hacia abajo
 					IPacket tcpLayer = new TCP()
 							.setDestinationPort(tcp.getSourcePort()) // Al revés
