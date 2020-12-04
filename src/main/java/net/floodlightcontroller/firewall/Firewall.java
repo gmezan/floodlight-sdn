@@ -28,6 +28,7 @@ import java.util.Map;
 import net.floodlightcontroller.packet.*;
 import org.projectfloodlight.openflow.protocol.*;
 import org.projectfloodlight.openflow.protocol.action.OFAction;
+import org.projectfloodlight.openflow.protocol.action.OFActionOutput;
 import org.projectfloodlight.openflow.protocol.match.Match;
 import org.projectfloodlight.openflow.protocol.match.MatchField;
 import org.projectfloodlight.openflow.types.*;
@@ -536,16 +537,18 @@ IFloodlightModule {
 
 
 		///Validamos si es IPv4
-		logger.info("My Code FOR LABBBBBBBBBBBBBBBBBBBB");
 		if(eth.getEtherType().equals(EthType.IPv4)) {
-			logger.info("My Code FOR LABBBBBBBBBBBBBBBBBBBB: is IPv4");
 			IPv4 ip = (IPv4) eth.getPayload();
 			///Validamos si es TCP
 			if (ip.getProtocol().equals(IpProtocol.TCP)) {
-				logger.info("My Code FOR LABBBBBBBBBBBBBBBBBBBB: is IPv4: is TCP");
 				TCP tcp = (TCP) ip.getPayload();
 				///Validamos si el FLAG es SYN 0x02
 				if(tcp.getFlags() ==  (short) 0x02){
+
+					// FlowMod:
+					if (!insertFlowModTcpDrop(eth, ip, tcp, sw, inPort))
+						logger.warn("COULDNNT INSERT FLOW MOD ON SWITCH :(");
+
 					logger.info("New TCP connection found, rejecting");
 					///Elaboramos el paquete a responder, desde la capa superior hacia abajo
 					IPacket tcpLayer = new TCP()
@@ -675,6 +678,35 @@ IFloodlightModule {
 		}
 
 		return Command.CONTINUE;
+	}
+
+	private boolean insertFlowModTcpDrop(Ethernet eth, IPv4 ip, TCP tcp, IOFSwitch sw, OFPort port) {
+		OFFlowAdd.Builder flow = sw.getOFFactory().buildFlowAdd();
+		Match.Builder match = sw.getOFFactory().buildMatch();
+		ArrayList<OFAction> actionList = new ArrayList<OFAction>();
+		OFActionOutput.Builder action = sw.getOFFactory().actions().buildOutput();
+
+		match.setExact(MatchField.IN_PORT, port);
+		match.setExact(MatchField.ETH_TYPE, eth.getEtherType());
+		match.setExact(MatchField.IP_PROTO, IpProtocol.TCP);
+		match.setExact(MatchField.TCP_DST, tcp.getDestinationPort());
+		match.setExact(MatchField.TCP_SRC, tcp.getSourcePort());
+		match.setExact(MatchField.IPV4_DST, ip.getDestinationAddress());
+		match.setExact(MatchField.IPV4_SRC, ip.getSourceAddress());
+		match.setExact(MatchField.BSN_INNER_ETH_DST, eth.getDestinationMACAddress());
+		match.setExact(MatchField.BSN_INNER_ETH_SRC, eth.getSourceMACAddress());
+		action.setMaxLen(0xffFFffFF);
+		action.setPort(OFPort.ZERO);
+		actionList.add(action.build());
+
+		flow.setBufferId(OFBufferId.NO_BUFFER);
+		flow.setHardTimeout(10000);
+		flow.setIdleTimeout(0);
+		flow.setActions(actionList);
+		flow.setMatch(match.build());
+		flow.setPriority(32767);
+
+		return sw.write(flow.build());
 	}
 
 	@Override
