@@ -62,6 +62,11 @@ public class StatisticsCollector implements IFloodlightModule, IStatisticsServic
 	private static final HashMap<NodePortTuple, SwitchPortBandwidth> portStats = new HashMap<NodePortTuple, SwitchPortBandwidth>();
 	private static final HashMap<NodePortTuple, SwitchPortBandwidth> tentativePortStats = new HashMap<NodePortTuple, SwitchPortBandwidth>();
 
+
+
+	private static U64 PortTxThreshold;
+	private static U64 PortRxThreshold;
+
 	/**
 	 * Run periodically to collect all port statistics. This only collects
 	 * bandwidth stats right now, but it could be expanded to record other
@@ -121,18 +126,51 @@ public class StatisticsCollector implements IFloodlightModule, IStatisticsServic
 								txBytesCounted = pse.getTxBytes().subtract(spb.getPriorByteValueTx());
 							}
 							long timeDifSec = (System.currentTimeMillis() - spb.getUpdateTime()) / MILLIS_PER_SEC;
-							portStats.put(npt, SwitchPortBandwidth.of(npt.getNodeId(), npt.getPortId(), 
-									U64.ofRaw((rxBytesCounted.getValue() * BITS_PER_BYTE) / timeDifSec), 
-									U64.ofRaw((txBytesCounted.getValue() * BITS_PER_BYTE) / timeDifSec), 
-									pse.getRxBytes(), pse.getTxBytes())
-									);
-							
+							spb = SwitchPortBandwidth.of(npt.getNodeId(), npt.getPortId(),
+									U64.ofRaw((rxBytesCounted.getValue() * BITS_PER_BYTE) / timeDifSec),
+									U64.ofRaw((txBytesCounted.getValue() * BITS_PER_BYTE) / timeDifSec),
+									pse.getRxBytes(), pse.getTxBytes());
+							portStats.put(npt, spb);
+
+							compareSpb2Thresholds(spb);
+
+
 						} else { /* initialize */
 							tentativePortStats.put(npt, SwitchPortBandwidth.of(npt.getNodeId(), npt.getPortId(), U64.ZERO, U64.ZERO, pse.getRxBytes(), pse.getTxBytes()));
 						}
 					}
 				}
 			}
+		}
+
+		private void compareSpb2Thresholds(SwitchPortBandwidth spb) {
+			log.info("Se compara el PortRxThreshold en el switch: {}, puerto: {}",
+					new Object[]{spb.getSwitchId().toString(),
+							spb.getBitsPerSecondRx().toString()});
+			if (spb.getBitsPerSecondRx().compareTo(PortRxThreshold)>0){ // Si pasa el umbral
+				log.warn("Se superó el PortRxThreshold en el switch: {}, puerto: {}, con un bandwidth de: {}",
+						new Object[]{spb.getSwitchId().toString(),
+								spb.getBitsPerSecondRx().toString(),
+								spb.getBitsPerSecondRx().toString()});
+			}
+
+			log.info("Se compara el PortTxThreshold en el switch: {}, puerto: {}",
+					new Object[]{spb.getSwitchId().toString(),
+							spb.getBitsPerSecondTx().toString()});
+			if (spb.getBitsPerSecondTx().compareTo(PortTxThreshold)>0){ // Si pasa el umbral
+				log.warn("Se superó el PortTxThreshold en el switch: {}, puerto: {}, con un bandwidth de: {}",
+						new Object[]{spb.getSwitchId().toString(),
+								spb.getBitsPerSecondTx().toString(),
+								spb.getBitsPerSecondTx().toString()});
+			}
+		}
+	}
+
+	// TODO: LAB4 Gustavo
+	private class FlowStatsCollector implements Runnable {
+		@Override
+		public void run() {
+
 		}
 	}
 
@@ -206,6 +244,10 @@ public class StatisticsCollector implements IFloodlightModule, IStatisticsServic
 		restApiService = context.getServiceImpl(IRestApiService.class);
 
 		Map<String, String> config = context.getConfigParams(this);
+
+		PortTxThreshold = U64.of(Long.parseLong(config.get("PortTxThreshold").trim()));
+		PortRxThreshold = U64.of(Long.parseLong(config.get("PortRxThreshold").trim()));
+
 		if (config.containsKey(ENABLED_STR)) {
 			try {
 				isEnabled = Boolean.parseBoolean(config.get(ENABLED_STR).trim());
