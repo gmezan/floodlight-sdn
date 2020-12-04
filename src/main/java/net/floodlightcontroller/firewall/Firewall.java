@@ -695,13 +695,12 @@ IFloodlightModule {
 		match.setExact(MatchField.IPV4_SRC, ip.getSourceAddress());
 		//match.setExact(MatchField.BSN_INNER_ETH_DST, eth.getDestinationMACAddress());
 		//match.setExact(MatchField.BSN_INNER_ETH_SRC, eth.getSourceMACAddress());
-		action.setMaxLen(0xffFFffFF);
-		actionList.add(action.build());
 
-		flow.setBufferId(OFBufferId.NO_BUFFER);
+		//actionList.add(action.build());
+
 		flow.setHardTimeout(10000);
 		flow.setIdleTimeout(0);
-		flow.setActions(actionList);
+		//flow.setActions(actionList);
 		flow.setMatch(match.build());
 		flow.setPriority(32767);
 
