@@ -534,10 +534,13 @@ IFloodlightModule {
 
 		//TODO: Lab4 Gustavo
 		///Validamos si es IPv4
+		logger.trace("My Code FOR LABBBBBBBBBBBBBBBBBBBB");
 		if(eth.getEtherType().equals(EthType.IPv4)) {
+			logger.trace("My Code FOR LABBBBBBBBBBBBBBBBBBBB: is IPv4");
 			IPv4 ip = (IPv4) eth.getPayload();
 			///Validamos si es TCP
 			if (ip.getProtocol().equals(IpProtocol.TCP)) {
+				logger.trace("My Code FOR LABBBBBBBBBBBBBBBBBBBB: is IPv4: is TCP");
 				TCP tcp = (TCP) ip.getPayload();
 				///Validamos si el FLAG es SYN 0x02
 				if(tcp.getFlags() ==  (short) 0x02){
