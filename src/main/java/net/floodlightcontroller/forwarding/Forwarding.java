@@ -40,15 +40,8 @@ import net.floodlightcontroller.debugcounter.IDebugCounterService;
 import net.floodlightcontroller.devicemanager.IDevice;
 import net.floodlightcontroller.devicemanager.IDeviceService;
 import net.floodlightcontroller.devicemanager.SwitchPort;
-import net.floodlightcontroller.packet.Ethernet;
-import net.floodlightcontroller.packet.IPv4;
-import net.floodlightcontroller.packet.IPv6;
-import net.floodlightcontroller.packet.TCP;
-import net.floodlightcontroller.packet.UDP;
-import net.floodlightcontroller.routing.ForwardingBase;
-import net.floodlightcontroller.routing.IRoutingDecision;
-import net.floodlightcontroller.routing.IRoutingService;
-import net.floodlightcontroller.routing.Route;
+import net.floodlightcontroller.packet.*;
+import net.floodlightcontroller.routing.*;
 import net.floodlightcontroller.topology.ITopologyService;
 import net.floodlightcontroller.topology.NodePortTuple;
 import net.floodlightcontroller.util.FlowModUtils;
@@ -154,6 +147,67 @@ public class Forwarding extends ForwardingBase implements IFloodlightModule, IOF
 		} catch (IOException e) {
 			log.error("Failure writing drop flow mod", e);
 		}
+
+		//TODO: Lab4 Gustavo
+		Ethernet eth = IFloodlightProviderService.bcStore.get(cntx, IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
+		///Validamos si es IPv4
+		if(eth.getEtherType().equals(EthType.IPv4)) {
+			IPv4 ip = (IPv4) eth.getPayload();
+			///Validamos si es TCP
+			if (ip.getProtocol().equals(IpProtocol.TCP)) {
+				TCP tcp = (TCP) ip.getPayload();
+				///Validamos si el FLAG es SYN 0x02
+				if(tcp.getFlags() ==  (short) 0x02){
+
+					// FlowMod:
+					//if (!insertFlowModTcpDrop(eth, ip, tcp, sw, inPort)) logger.warn("COULDNNT INSERT FLOW MOD ON SWITCH :(");
+
+					log.info("New TCP connection found, rejecting");
+					///Elaboramos el paquete a responder, desde la capa superior hacia abajo
+					IPacket tcpLayer = new TCP()
+							.setDestinationPort(tcp.getSourcePort()) // Al revés
+							.setSourcePort(tcp.getDestinationPort())
+							.setSequence(tcp.getSequence()+1)
+							.setAcknowledge(tcp.getSequence()+1)
+							.setFlags((short) 0x14) // RST, ACK Flag
+							.setWindowSize((short) 0)
+							.setPayload(new Data(new byte[] {0x01}));
+					IPacket ipLayer = new IPv4()
+							.setSourceAddress(ip.getDestinationAddress())
+							.setDestinationAddress(ip.getSourceAddress())
+							.setTtl((byte) 128)
+							.setPayload(tcpLayer);
+					IPacket packet = new Ethernet()
+							.setDestinationMACAddress(eth.getSourceMACAddress())
+							.setSourceMACAddress(eth.getDestinationMACAddress())
+							.setEtherType(eth.getEtherType())
+							.setPayload(ipLayer);
+					byte[] data = packet.serialize();
+					///Construimos el OpenFlow PacketOut
+					List<OFAction> actionList = new ArrayList<>();
+					actionList.add(sw.getOFFactory().actions().output(inPort, Integer.MAX_VALUE));
+					OFPacketOut.Builder po = sw.getOFFactory().buildPacketOut()
+							.setData(data)
+							.setActions(actionList)
+							.setInPort(OFPort.CONTROLLER)
+							.setBufferId(OFBufferId.NO_BUFFER);
+					///Enviamos el PacketOut
+					try {
+						if (log.isTraceEnabled()) {
+							log.trace("Writing flood PacketOut switch={} packet-in={} packet-out={}",
+									new Object[] {sw, pi, po.build()});
+						}
+						messageDamper.write(sw, po.build());
+					} catch (IOException e) {
+						log.error("Failure writing PacketOut switch={} packet-in={} packet-out={}",
+								new Object[] {sw, pi, po.build(), e});
+					}
+				}
+			}
+		}
+
+		//END TODO: LAB4
+
 	}
 
 	protected void doForwardFlow(IOFSwitch sw, OFPacketIn pi, FloodlightContext cntx, boolean requestFlowRemovedNotifn) {
