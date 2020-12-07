@@ -19,6 +19,7 @@ import org.projectfloodlight.openflow.types.DatapathId;
 import org.projectfloodlight.openflow.types.OFPort;
 import org.projectfloodlight.openflow.types.TableId;
 import org.projectfloodlight.openflow.types.U64;
+import net.floodlightcontroller.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +62,7 @@ public class StatisticsCollector implements IFloodlightModule, IStatisticsServic
 	private static final HashMap<NodePortTuple, SwitchPortBandwidth> tentativePortStats = new HashMap<NodePortTuple, SwitchPortBandwidth>();
 
 
-	private static final HashMap<DatapathId, List<OFFlowStatsEntry>> flowStats = new HashMap<DatapathId, List<OFFlowStatsEntry>>();
+	private static final HashMap<Pair<Match, DatapathId>, FlowRuleStats> flowStats = new HashMap<Pair<Match, DatapathId>, FlowRuleStats>();
 	private static final HashMap<DatapathId, List<OFFlowStatsEntry>> tentativeFlowStats = new HashMap<DatapathId, List<OFFlowStatsEntry>>();
 
 
@@ -176,17 +177,28 @@ public class StatisticsCollector implements IFloodlightModule, IStatisticsServic
 	private class FlowStatsCollector implements Runnable {
 		@Override
 		public void run() {
+			flowStats.clear();
 			Map<DatapathId, List<OFStatsReply>> replies = getSwitchStatistics(switchService.getAllSwitchDpids(), OFStatsType.FLOW);
 			for (Entry<DatapathId, List<OFStatsReply>> e : replies.entrySet()) {
+				IOFSwitch sw = switchService.getSwitch(e.getKey());
 				for (OFStatsReply r : e.getValue()) {
 					OFFlowStatsReply psr = (OFFlowStatsReply) r;
 
-					if (flowStats.containsKey(e.getKey())){ //update
-						flowStats.put(e.getKey(), psr.getEntries());
-					}
-					else { //init
-						log.info("Creating new FlowStat entry for switch: {}", e.getKey());
-						flowStats.put(e.getKey(), psr.getEntries());
+					for (OFFlowStatsEntry pse : psr.getEntries()) {
+						if(sw.getOFFactory().getVersion().compareTo(OFVersion.OF_14) == 0){
+							log.warn("Flow Stats not supported in OpenFlow 1.4.");
+
+						} else {
+							Pair<Match, DatapathId> pair = new Pair<>(pse.getMatch(), e.getKey());
+							flowStats.put(pair,FlowRuleStats.of(
+									e.getKey(),
+									pse.getByteCount(),
+									pse.getPacketCount(),
+									pse.getPriority(),
+									pse.getHardTimeout(),
+									pse.getIdleTimeout(),
+									pse.getDurationSec()));
+						}
 					}
 
 				}
