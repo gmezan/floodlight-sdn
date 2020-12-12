@@ -84,6 +84,7 @@
     	<include name="hamcrest-integration-1.3.jar"/>
     	<include name="hamcrest-library-1.3.jar"/>
         <include name="j3dutils.jar"/>
+        <include name="mysql-connector-java-8.0.17.jar"/>
     </patternset>
 
     <path id="classpath">
