@@ -62,6 +62,7 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
         Ethernet eth = IFloodlightProviderService.bcStore.get(cntx, IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
         OFPort inPort = (pi.getVersion().compareTo(OFVersion.OF_12) < 0 ? pi.getInPort() : pi.getMatch().get(MatchField.IN_PORT));
 
+        logger.info("Making a decision.");
         // Allowing L2 broadcast + ARP broadcast request (also deny malformed
         // broadcasts -> L2 broadcast + L3 unicast)
         if (eth.isBroadcast()) {
@@ -93,6 +94,7 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
         // check if we have a matching rule for this packet/flow and no decision has been made yet
         if (decision == null) {
             // verify the packet
+            logger.info("Verifying with UserRoutingDecision.");
 
             userRoutingDecision.verify();
 
