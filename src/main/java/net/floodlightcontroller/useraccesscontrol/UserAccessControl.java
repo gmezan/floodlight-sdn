@@ -104,18 +104,14 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
                             IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
                             IRoutingDecision.RoutingAction.UAC_DROP);
                     decision.addToContext(cntx);
-                    if (logger.isTraceEnabled()) {
-                        logger.trace("Denying access to flow with PacketIn={}", pi);
-                    }
+                    logger.info("Denying access to flow with PacketIn={}", pi);
                     break;
                 case ALLOW:
                     decision = new RoutingDecision(sw.getId(), inPort,
                             IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
                             IRoutingDecision.RoutingAction.UAC_FORWARD);
                     decision.addToContext(cntx);
-                    if (logger.isTraceEnabled()) {
-                        logger.trace("Allowing access to flow with PacketIn={}", pi);
-                    }
+                    logger.info("Allowing access to flow with PacketIn={}", pi);
                     break;
                 case BLOCK:
                     break;
