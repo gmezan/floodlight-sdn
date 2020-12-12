@@ -33,34 +33,29 @@ public class UserDao extends Dao{
         try(Connection connection = getConnection();
             PreparedStatement pstmt = connection.prepareStatement(query);
             ) {
-
             pstmt.setInt(1, code);
-
             try(ResultSet rs = pstmt.executeQuery();) {
                 while (rs.next()){
-                    logger.info("Result 1 : "  + rs.getString(2));
                     user.setCode(rs.getInt(1));
                     user.setFullname(rs.getString(2));
                     user.setIdrol(rs.getInt(3));
                     user.setActive(rs.getBoolean(4));
                     Timestamp timestamp = rs.getTimestamp(5);
-                    if (timestamp!=null)
-                        user.setActive_timestamp(timestamp.toLocalDateTime());
+                    if (timestamp!=null) user.setActive_timestamp(timestamp.toLocalDateTime());
                     else user.setActive_timestamp(null);
                     user.setIp(rs.getString(6));
                     user.setMac(rs.getString(7));
                     user.setAttachment_point(rs.getString(8));
                 }
             }
-
         } catch (SQLException throwable) {
             throwable.printStackTrace();
         }
-
         return user;
     }
 
     public User findUserByIpAndMac(String ip, String mac){
+        // Only Active users
         User user = new User();
         String query = "";
 
