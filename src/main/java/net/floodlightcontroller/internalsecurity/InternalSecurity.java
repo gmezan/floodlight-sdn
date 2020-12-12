@@ -3,6 +3,7 @@ package net.floodlightcontroller.internalsecurity;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -39,11 +40,11 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 	IFloodlightProviderService floodlightProviderService;
 	IRestApiService restApiService;
 	IDeviceService deviceService;
+	PortScanSuspect portScanSuspect;
+	List<> suspects;
 
 	// Our internal state
-	protected Map<MacAddress, Integer> hostToSyn; // map of host MAC to syn flag counter
-	protected Map<MacAddress, Integer> hostToSynAck; // map of host MAC to syn-ack flag counter
-	protected Map<MacAddress, Long > hostToTimestamp; // map of host MAC to timestamp
+	protected Map<MacAddress, PortScanSuspect> macToSuspect;
 
 
 	// IFloodlightModule
@@ -81,8 +82,8 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		floodlightProviderService = context.getServiceImpl(IFloodlightProviderService.class);
 		restApiService = context.getServiceImpl(IRestApiService.class);
 
-		hostToSyn = new ConcurrentHashMap<>();
-		hostToSynAck = new ConcurrentHashMap<>();
+		macToSuspect = new ConcurrentHashMap<>();
+		portScanSuspect = new PortScanSuspect();
 
 	}
 
@@ -135,11 +136,18 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		Ethernet eth = IFloodlightProviderService.bcStore.get(cntx,
 				IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
 		Command ret = Command.STOP;
-
+		
 		// 1. caso TCP SYN
 
 		// Revisar si la MAC origen está en el MAP de contadores SYN
-
+		if(macToSuspect.containsKey(eth.getSourceMACAddress())) {
+			
+		}else {
+			PortScanSuspect a = new PortScanSuspect();
+			hostToSyn.put(eth.getSourceMACAddress(), 1);
+		//	hostToTimestamp.put(eth.getSourceMACAddress(), System.currentTimeMillis());
+			hostToSynAck.put(eth.getSourceMACAddress(), 0);
+		}
 		// Si no está, agregarlo al map de contadores SYN, SYN-ACK y al de tiempo (con la hora actual)
 
 		// si está, revisar si está dentro de la ventana de analisis, si no está en la ventana de análsis borrarlo del map
@@ -161,13 +169,16 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		return ret;
 	}
 
-	protected class PortScanSuspect{
+	protected class Sujeto{
+		Map<MacAddress, Datos> datos;
+	}
+	
+	protected class Datos{
 		MacAddress sourceMACAddress;
 		MacAddress destMACAddress;
-		Integer ackCounter;
+		Integer synCounter;
 		Integer synAckCounter;
 		private long startTime;
-
 	}
 
 
