@@ -3,6 +3,7 @@ package net.floodlightcontroller.internalsecurity;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -39,14 +40,11 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 	IFloodlightProviderService floodlightProviderService;
 	IRestApiService restApiService;
 	IDeviceService deviceService;
+	PortScanSuspect portScanSuspect;
 
-	//Custom LAB5
-	private AttackScanner attackScanner;
 
 	// Our internal state
-	protected Map<MacAddress, Integer> hostToSyn; // map of host MAC to syn flag counter
-	protected Map<MacAddress, Integer> hostToSynAck; // map of host MAC to syn-ack flag counter
-	protected Map<MacAddress, Long > hostToTimestamp; // map of host MAC to timestamp
+	protected Map<MacAddress, PortScanSuspect> macToSuspect;
 
 
 	// IFloodlightModule
@@ -84,10 +82,9 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		floodlightProviderService = context.getServiceImpl(IFloodlightProviderService.class);
 		restApiService = context.getServiceImpl(IRestApiService.class);
 
-		hostToSyn = new ConcurrentHashMap<>();
-		hostToSynAck = new ConcurrentHashMap<>();
+		macToSuspect = new ConcurrentHashMap<>();
+		portScanSuspect = new PortScanSuspect();
 
-		attackScanner = new AttackScanner();
 
 	}
 
@@ -167,9 +164,24 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 			return Command.CONTINUE;
 		}
 
+		return ret;
+	}
+
+	private boolean isMaliciousRequestsAttack() {
+		return false;
+	}
+
+	private boolean isPortScanningAttack() {
+		return false;
+	}
+
+	private boolean isIpSpoofingAtack() {
+
 		// 1. caso TCP SYN
 
 		// Revisar si la MAC origen está en el MAP de contadores SYN
+
+		//	hostToTimestamp.put(eth.getSourceMACAddress(), System.currentTimeMillis());
 
 		// Si no está, agregarlo al map de contadores SYN, SYN-ACK y al de tiempo (con la hora actual)
 
@@ -185,16 +197,11 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 		// Si está, incrementar el contador SYN-ACK
 
-		return ret;
+		return false;
 	}
 
-	protected class PortScanSuspect{
-		MacAddress sourceMACAddress;
-		MacAddress destMACAddress;
-		Integer ackCounter;
-		Integer synAckCounter;
-		private long startTime;
-
+	protected class Sujeto{
+		Map<MacAddress, Data> datos;
 	}
 
 
