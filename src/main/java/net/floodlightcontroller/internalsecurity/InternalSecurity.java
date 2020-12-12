@@ -298,7 +298,7 @@ public class InternalSecurity implements IFloodlightModule, IVirtualNetworkServi
 
 	@Override
 	public String getName() {
-		return "virtualizer";
+		return InternalSecurity.class.getSimpleName();
 	}
 
 	@Override
