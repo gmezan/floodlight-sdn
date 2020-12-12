@@ -24,6 +24,15 @@ public abstract class Dao {
         return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 
+    public Connection getConnection() throws SQLException{
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException ex) {
+            ex.printStackTrace();
+        }
+
+        return DriverManager.getConnection(URL, USER, PASSWORD);
+    }
 
 
 }

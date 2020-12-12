@@ -4,14 +4,22 @@ import java.time.LocalDateTime;
 
 public class User {
 
+    private Integer code;
     private String fullname;
-    private int idrol;
-    private boolean active;
+    private Integer idrol;
+    private Boolean active;
     private LocalDateTime active_timestamp;
     private String ip;
     private String mac;
     private String attachment_point;
 
+    public Integer getCode() {
+        return code;
+    }
+
+    public void setCode(Integer code) {
+        this.code = code;
+    }
 
     public String getFullname() {
         return fullname;
@@ -21,19 +29,19 @@ public class User {
         this.fullname = fullname;
     }
 
-    public int getIdrol() {
+    public Integer getIdrol() {
         return idrol;
     }
 
-    public void setIdrol(int idrol) {
+    public void setIdrol(Integer idrol) {
         this.idrol = idrol;
     }
 
-    public boolean isActive() {
+    public Boolean getActive() {
         return active;
     }
 
-    public void setActive(boolean active) {
+    public void setActive(Boolean active) {
         this.active = active;
     }
 
