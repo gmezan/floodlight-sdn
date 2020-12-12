@@ -36,10 +36,11 @@ public class UserDao extends Dao{
         try(Connection connection = getConnection();
             PreparedStatement pstmt = connection.prepareStatement(query);
             ) {
-
+            logger.info("Preparing statement");
             pstmt.setInt(1, code);
 
             try(ResultSet rs = pstmt.executeQuery();) {
+                logger.info("Result set got");
                 while (rs.next()){
                     user.setCode(rs.getInt(1));
                     user.setFullname(rs.getString(2));
