@@ -8,6 +8,7 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
+import net.floodlightcontroller.packet.Ethernet;
 import net.floodlightcontroller.useraccesscontrol.db.UserDao;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFType;
@@ -28,7 +29,13 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
 
     @Override
     public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
-        return null;
+        Ethernet eth =
+                IFloodlightProviderService.bcStore.get(cntx,
+                        IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
+
+        logger.info("Running UserAccessControl");
+
+        return Command.CONTINUE;
     }
 
     @Override
@@ -68,13 +75,8 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
     public void init(FloodlightModuleContext context) throws FloodlightModuleException {
         floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
         logger = LoggerFactory.getLogger(UserAccessControl.class);
-        userDao = new UserDao();
-        try (Connection conn = userDao.getConnection()) {
-            logger.info("Database connection successful");
-        } catch (SQLException | ClassNotFoundException throwables) {
-            logger.error("Database connection error");
-            throwables.printStackTrace();
-        }
+        userDao = new UserDao(logger);
+
     }
 
     @Override
