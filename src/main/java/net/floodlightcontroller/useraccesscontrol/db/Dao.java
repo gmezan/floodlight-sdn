@@ -9,7 +9,7 @@ public abstract class Dao {
 
     protected final String SOCKET = "localhost:3306";
     protected final String DB_NAME = "floodlight";
-    protected final String USER = "gustavo";
+    protected final String USER = "root";
     protected final String PASSWORD = "root";
     protected final String PARAMS = "serverTimezone=America/Lima&useSSL=false&allowPublicKeyRetrieval=true";
     protected final String URL = "jdbc:mysql://"+SOCKET+"/"+DB_NAME+"?"+PARAMS;
