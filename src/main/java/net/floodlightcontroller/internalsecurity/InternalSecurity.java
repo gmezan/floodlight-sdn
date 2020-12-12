@@ -40,6 +40,9 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 	IRestApiService restApiService;
 	IDeviceService deviceService;
 
+	//Custom LAB5
+	private AttackScanner attackScanner;
+
 	// Our internal state
 	protected Map<MacAddress, Integer> hostToSyn; // map of host MAC to syn flag counter
 	protected Map<MacAddress, Integer> hostToSynAck; // map of host MAC to syn-ack flag counter
@@ -84,6 +87,8 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		hostToSyn = new ConcurrentHashMap<>();
 		hostToSynAck = new ConcurrentHashMap<>();
 
+		attackScanner = new AttackScanner();
+
 	}
 
 	@Override
@@ -95,7 +100,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 	@Override
 	public String getName() {
-		return "anti port scanning";
+		return InternalSecurity.class.getSimpleName();
 	}
 
 	@Override
@@ -136,6 +141,32 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 				IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
 		Command ret = Command.STOP;
 
+		if (isIpSpoofingAtack()){
+			if (log.isTraceEnabled())
+				log.trace("IPSpoofing detected at {} y {}",
+						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
+
+			// TODO: ??
+
+		}
+		if (isPortScanningAttack()){
+			if (log.isTraceEnabled())
+				log.trace("PortScanning detected at {} y {}",
+						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
+			// TODO: ??
+
+		}
+		if (isMaliciousRequestsAttack()){
+			if (log.isTraceEnabled())
+				log.trace("MaliciousRequests detected at {} y {}",
+						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
+			// TODO: ??
+
+		} else {
+			// OK
+			return Command.CONTINUE;
+		}
+
 		// 1. caso TCP SYN
 
 		// Revisar si la MAC origen está en el MAP de contadores SYN
@@ -153,10 +184,6 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		// Revisar si la MAC origen están al MAP de contadores SYN
 
 		// Si está, incrementar el contador SYN-ACK
-
-		if (log.isTraceEnabled())
-			log.trace("Anti port scann entre {} y {}",
-					new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 
 		return ret;
 	}
