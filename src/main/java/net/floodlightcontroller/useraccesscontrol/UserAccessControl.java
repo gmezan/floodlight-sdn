@@ -9,13 +9,11 @@ import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.devicemanager.IDeviceService;
-import net.floodlightcontroller.firewall.FirewallRule;
-import net.floodlightcontroller.firewall.RuleMatchPair;
 import net.floodlightcontroller.packet.Ethernet;
 import net.floodlightcontroller.packet.IPv4;
 import net.floodlightcontroller.routing.IRoutingDecision;
 import net.floodlightcontroller.routing.RoutingDecision;
-import net.floodlightcontroller.useraccesscontrol.db.UserDao;
+import net.floodlightcontroller.useraccesscontrol.dao.UserDao;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFPacketIn;
 import org.projectfloodlight.openflow.protocol.OFType;
@@ -61,8 +59,6 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
     public Command processPacketInMessage(IOFSwitch sw, OFPacketIn pi, IRoutingDecision decision, FloodlightContext cntx) {
         Ethernet eth = IFloodlightProviderService.bcStore.get(cntx, IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
         OFPort inPort = (pi.getVersion().compareTo(OFVersion.OF_12) < 0 ? pi.getInPort() : pi.getMatch().get(MatchField.IN_PORT));
-
-        logger.info("Making a decision.");
         // Allowing L2 broadcast + ARP broadcast request (also deny malformed
         // broadcasts -> L2 broadcast + L3 unicast)
         if (eth.isBroadcast()) {
@@ -94,10 +90,8 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
         // check if we have a matching rule for this packet/flow and no decision has been made yet
         if (decision == null) {
             // verify the packet
-            logger.info("Verifying with UserRoutingDecision.");
 
             userRoutingDecision.verify();
-
             switch (userRoutingDecision.getAction()){
                 case DENY:
                     decision = new RoutingDecision(sw.getId(), inPort,

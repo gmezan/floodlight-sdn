@@ -1,4 +1,4 @@
-package net.floodlightcontroller.useraccesscontrol.db;
+package net.floodlightcontroller.useraccesscontrol.dao;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

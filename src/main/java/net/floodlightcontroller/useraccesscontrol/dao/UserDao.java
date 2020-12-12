@@ -1,4 +1,4 @@
-package net.floodlightcontroller.useraccesscontrol.db;
+package net.floodlightcontroller.useraccesscontrol.dao;
 
 import org.slf4j.Logger;
 
@@ -17,5 +17,8 @@ public class UserDao extends Dao{
             e.printStackTrace();
         }
     }
+
+
+
 
 }
