@@ -40,7 +40,6 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 	IFloodlightProviderService floodlightProviderService;
 	IRestApiService restApiService;
 	IDeviceService deviceService;
-	PortScanSuspect portScanSuspect;
 
 
 	// Our internal state
@@ -83,7 +82,6 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		restApiService = context.getServiceImpl(IRestApiService.class);
 
 		macToSuspect = new ConcurrentHashMap<>();
-		portScanSuspect = new PortScanSuspect();
 
 
 	}
@@ -137,6 +135,9 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		Ethernet eth = IFloodlightProviderService.bcStore.get(cntx,
 				IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
 		Command ret = Command.STOP;
+		
+		
+		updateData(eth);
 
 		if (isIpSpoofingAtack()){
 			if (log.isTraceEnabled())
@@ -167,36 +168,43 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		return ret;
 	}
 
+	private boolean updateData(Ethernet eth) {
+		// TODO Updatear los contadores en la estructura de datos
+		// TODO Retornar verdadero si ya existia, falso si no existia.
+		return false;
+	}
+	
 	private boolean isMaliciousRequestsAttack() {
 		return false;
 	}
 
 	private boolean isPortScanningAttack() {
+		
+		// 1. caso TCP SYN
+
+				// Revisar si la MAC origen está en el MAP de contadores SYN
+
+				//	hostToTimestamp.put(eth.getSourceMACAddress(), System.currentTimeMillis());
+
+				// Si no está, agregarlo al map de contadores SYN, SYN-ACK y al de tiempo (con la hora actual)
+
+				// si está, revisar si está dentro de la ventana de analisis, si no está en la ventana de análsis borrarlo del map
+
+				// si está en la ventana de análisis, revisar si longitud(SYN)-longitud(SYN-ACK)> THRESHOLD
+
+				// si es TRUE, continuear el pipeline, si es FALSE, DROP
+
+				// 2. Caso TCP SYN-ACK
+
+				// Revisar si la MAC origen están al MAP de contadores SYN
+
+				// Si está, incrementar el contador SYN-ACK
+		
 		return false;
 	}
 
 	private boolean isIpSpoofingAtack() {
-
-		// 1. caso TCP SYN
-
-		// Revisar si la MAC origen está en el MAP de contadores SYN
-
-		//	hostToTimestamp.put(eth.getSourceMACAddress(), System.currentTimeMillis());
-
-		// Si no está, agregarlo al map de contadores SYN, SYN-ACK y al de tiempo (con la hora actual)
-
-		// si está, revisar si está dentro de la ventana de analisis, si no está en la ventana de análsis borrarlo del map
-
-		// si está en la ventana de análisis, revisar si longitud(SYN)-longitud(SYN-ACK)> THRESHOLD
-
-		// si es TRUE, continuear el pipeline, si es FALSE, DROP
-
-		// 2. Caso TCP SYN-ACK
-
-		// Revisar si la MAC origen están al MAP de contadores SYN
-
-		// Si está, incrementar el contador SYN-ACK
-
+		
 		return false;
 	}
 
