@@ -7,9 +7,13 @@ import net.floodlightcontroller.devicemanager.IDevice;
 import net.floodlightcontroller.devicemanager.internal.Device;
 import net.floodlightcontroller.packet.IPv4;
 import net.floodlightcontroller.packet.IPv6;
+import net.floodlightcontroller.routing.IRoutingDecision;
+import net.floodlightcontroller.routing.RoutingDecision;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFPacketIn;
 import org.projectfloodlight.openflow.protocol.OFType;
+import org.projectfloodlight.openflow.protocol.OFVersion;
+import org.projectfloodlight.openflow.protocol.match.MatchField;
 import org.projectfloodlight.openflow.types.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -150,9 +154,14 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 	 * @return Command.CONTINUE if processing should be continued, Command.STOP otherwise.
 	 */
 	protected Command processPacketIn(IOFSwitch sw, OFPacketIn msg, FloodlightContext cntx) {
-		Ethernet eth = IFloodlightProviderService.bcStore.get(cntx,
-				IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
+		OFPacketIn pi  = (OFPacketIn) msg;
+		Ethernet eth = IFloodlightProviderService.bcStore.get(cntx, IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
+		OFPort inPort = (pi.getVersion().compareTo(OFVersion.OF_12) < 0 ? pi.getInPort() : pi.getMatch().get(MatchField.IN_PORT));
+
 		Command ret = Command.CONTINUE;
+
+		IRoutingDecision decision = null;
+		decision = IRoutingDecision.rtStore.get(cntx, IRoutingDecision.CONTEXT_DECISION);
 
 		log.info("PacketIn Processing on InternalSecurity");
 		
@@ -164,6 +173,11 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 
 			// TODO: ??
+			decision = new RoutingDecision(sw.getId(), inPort,
+					IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
+					IRoutingDecision.RoutingAction.DROP);
+			decision.addToContext(cntx);
+			return Command.CONTINUE;
 
 		}
 		if (isPortScanningAttack()){
@@ -179,9 +193,6 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 			// TODO: ??
 
-		} else {
-			// OK
-			return Command.CONTINUE;
 		}
 
 		return ret;
@@ -229,8 +240,6 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 		IPv4 ip = (IPv4) eth.getPayload();
 
-		log.info("DEBUG: queryDevices in process");
-
 		Iterator<? extends IDevice> it = deviceService.queryDevices(
 				eth.getSourceMACAddress(),
 				null,
@@ -239,10 +248,8 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 				sw.getId(),
 				OFPort.ZERO);
 
-		log.info("DEBUG: queryDevices Done");
-
 		if (it.hasNext() && (it.next()!=null)){
-			
+
 			log.info("Device exists. Not IP Spoofing Attack detected: {}", ip.getSourceAddress());
 			return false;
 		}
