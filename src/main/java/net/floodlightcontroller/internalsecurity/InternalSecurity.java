@@ -13,6 +13,7 @@ import org.projectfloodlight.openflow.protocol.OFType;
 import org.projectfloodlight.openflow.types.EthType;
 import org.projectfloodlight.openflow.types.IPv6Address;
 import org.projectfloodlight.openflow.types.MacAddress;
+import org.projectfloodlight.openflow.types.OFPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -238,7 +239,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 				ip.getSourceAddress(),
 				IPv6Address.NONE,
 				sw.getId(),
-				msg.getInPort());
+				OFPort.ZERO);
 
 		log.info("DEBUG: queryDevices Done");
 
