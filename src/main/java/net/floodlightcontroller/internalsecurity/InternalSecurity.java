@@ -257,8 +257,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		IDevice device = it.hasNext()? it.next():null;
 
 		if (device == null ||
-				(device.getIPv4Addresses().length == 0) ||
-				(device.getIPv4Addresses().length > 1) ||
+				(device.getIPv4Addresses().length != 1) ||
 				!device.getIPv4Addresses()[0].equals(ip.getSourceAddress())
 		)
 		{
