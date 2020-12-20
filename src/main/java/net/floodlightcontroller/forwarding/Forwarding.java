@@ -148,7 +148,7 @@ public class Forwarding extends ForwardingBase implements IFloodlightModule, IOF
 			log.error("Failure writing drop flow mod", e);
 		}
 
-		/* TODO: Lab4 Gustavo
+		// TODO: Lab4 Gustavo
 		Ethernet eth = IFloodlightProviderService.bcStore.get(cntx, IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
 		///Validamos si es IPv4
 		if(eth.getEtherType().equals(EthType.IPv4)) {
@@ -205,8 +205,8 @@ public class Forwarding extends ForwardingBase implements IFloodlightModule, IOF
 				}
 			}
 		}
-		TODO: LAB4
-		*/
+		//TODO: LAB4
+
 
 	}
 

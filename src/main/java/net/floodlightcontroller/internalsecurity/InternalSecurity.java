@@ -173,7 +173,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		}
 
 
-		if (isIpSpoofingAttack(eth, sw, msg)){
+		if (isIpSpoofingAttack(eth, sw, msg, cntx)){
 			if (log.isTraceEnabled())
 				log.trace("IPSpoofing detected at {} y {}",
 						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
@@ -239,7 +239,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		return false;
 	}
 
-	private boolean isIpSpoofingAttack(Ethernet eth, IOFSwitch sw, OFPacketIn msg) {
+	private boolean isIpSpoofingAttack(Ethernet eth, IOFSwitch sw, OFPacketIn msg, FloodlightContext cntx) {
 		//is IPv4?
 		if (!eth.getEtherType().equals(EthType.IPv4))
 			return false;
@@ -256,11 +256,18 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 		IDevice device = it.hasNext()? it.next():null;
 
-		if (device==null ||
+		if (device == null ||
 				(device.getIPv4Addresses().length > 1) ||
 				!device.getIPv4Addresses()[0].equals(ip.getSourceAddress())
 		)
 		{
+			if (device!=null) {
+				((IPv4)eth.getPayload()).setSourceAddress(device.getIPv4Addresses()[0]);
+				IFloodlightProviderService.bcStore.put(
+						cntx,
+						IFloodlightProviderService.CONTEXT_PI_PAYLOAD,
+						eth);
+			}
 			log.info("IP Spoofing Attack detected: {}", ip.getSourceAddress());
 			return true;
 		}
