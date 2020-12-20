@@ -10,10 +10,7 @@ import net.floodlightcontroller.packet.IPv6;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFPacketIn;
 import org.projectfloodlight.openflow.protocol.OFType;
-import org.projectfloodlight.openflow.types.EthType;
-import org.projectfloodlight.openflow.types.IPv6Address;
-import org.projectfloodlight.openflow.types.MacAddress;
-import org.projectfloodlight.openflow.types.OFPort;
+import org.projectfloodlight.openflow.types.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -236,7 +233,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 		IDevice dev = deviceService.findDevice(
 				eth.getSourceMACAddress(),
-				null,
+				VlanVid.ZERO,
 				ip.getSourceAddress(),
 				IPv6Address.NONE,
 				sw.getId(),
