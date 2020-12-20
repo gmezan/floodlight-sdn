@@ -397,15 +397,6 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 				!device.getIPv4Addresses()[0].equals(ip.getSourceAddress())
 		)
 		{
-			/*
-			if (device!=null && device.getIPv4Addresses().length > 0) {
-				ip.setSourceAddress(device.getIPv4Addresses()[0]);
-				eth.setPayload(ip);
-				IFloodlightProviderService.bcStore.put(
-						cntx,
-						IFloodlightProviderService.CONTEXT_PI_PAYLOAD,
-						eth);
-			}*/
 			log.info("IP Spoofing Attack detected: {}", ip.getSourceAddress());
 			return true;
 		}
