@@ -153,8 +153,9 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 	protected Command processPacketIn(IOFSwitch sw, OFPacketIn msg, FloodlightContext cntx) {
 		Ethernet eth = IFloodlightProviderService.bcStore.get(cntx,
 				IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
-		Command ret = Command.STOP;
-		
+		Command ret = Command.CONTINUE;
+
+		log.info("PacketIn Processing on InternalSecurity");
 		
 		updateData(eth);
 
