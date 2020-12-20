@@ -168,8 +168,10 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		
 		updateData(eth);
 
-		if (decision != null)
-			return ret;
+		if (decision != null){
+			log.info("Decision found");
+		}
+
 
 		if (isIpSpoofingAttack(eth, sw, msg)){
 			if (log.isTraceEnabled())
