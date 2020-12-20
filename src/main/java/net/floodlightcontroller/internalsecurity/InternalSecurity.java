@@ -234,7 +234,8 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 		log.info("DEBUG: queryDevices in process");
 
-		Iterator<? extends IDevice> it = deviceService.queryDevices(eth.getSourceMACAddress(),
+		IDevice dev = deviceService.findDevice(
+				eth.getSourceMACAddress(),
 				null,
 				ip.getSourceAddress(),
 				IPv6Address.NONE,
@@ -243,8 +244,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 		log.info("DEBUG: queryDevices Done");
 
-		if (it.hasNext()){
-			IDevice dev = it.next();
+		if (dev != null){
 			log.info("Device exists. Not IP Spoofing Attack detected: {}", ip.getSourceAddress());
 			return false;
 		}
