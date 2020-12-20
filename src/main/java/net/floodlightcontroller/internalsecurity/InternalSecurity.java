@@ -254,13 +254,19 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 				sw.getId(),
 				OFPort.ZERO);
 
-		if (it.hasNext() && (it.next()!=null)){
-			log.info("Device exists. Not IP Spoofing Attack detected: {}", ip.getSourceAddress());
-			return false;
+		IDevice device = it.hasNext()? it.next():null;
+
+		if (device==null ||
+				(device.getIPv4Addresses().length > 1) ||
+				!device.getIPv4Addresses()[0].equals(ip.getSourceAddress())
+		)
+		{
+			log.info("IP Spoofing Attack detected: {}", ip.getSourceAddress());
+			return true;
 		}
 
-		log.info("IP Spoofing Attack detected: {}", ip.getSourceAddress());
-		return true;
+		log.info("Device exists. Not IP Spoofing Attack detected: {}", ip.getSourceAddress());
+		return false;
 	}
 
 	protected class Sujeto{
