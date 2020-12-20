@@ -249,13 +249,12 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		Iterator<? extends IDevice> it = deviceService.queryDevices(
 				eth.getSourceMACAddress(),
 				null,
-				ip.getSourceAddress(),
+				IPv4Address.NONE,
 				IPv6Address.NONE,
 				sw.getId(),
 				OFPort.ZERO);
 
 		if (it.hasNext() && (it.next()!=null)){
-
 			log.info("Device exists. Not IP Spoofing Attack detected: {}", ip.getSourceAddress());
 			return false;
 		}
