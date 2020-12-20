@@ -25,6 +25,8 @@ import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.core.util.AppCookie;
 import net.floodlightcontroller.devicemanager.IDeviceService;
 import net.floodlightcontroller.packet.Ethernet;
+import net.floodlightcontroller.packet.IPv4;
+import net.floodlightcontroller.packet.TCP;
 import net.floodlightcontroller.restserver.IRestApiService;
 
 
@@ -43,7 +45,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 
 	// Our internal state
-	protected Map<MacAddress, PortScanSuspect> macToSuspect;
+	protected Map<MacAddress, PortScanSuspect> macToSuspect; // <Mac origen, PortScanSuspect
 
 
 	// IFloodlightModule
@@ -132,8 +134,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 	 * @return Command.CONTINUE if processing should be continued, Command.STOP otherwise.
 	 */
 	protected Command processPacketIn(IOFSwitch sw, OFPacketIn msg, FloodlightContext cntx) {
-		Ethernet eth = IFloodlightProviderService.bcStore.get(cntx,
-				IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
+		Ethernet eth = IFloodlightProviderService.bcStore.get(cntx, IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
 		Command ret = Command.STOP;
 		
 		
@@ -169,9 +170,135 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 	}
 
 	private boolean updateData(Ethernet eth) {
+		IPv4 ipv4 = (IPv4) eth.getPayload();
+		TCP tcp = (TCP) ipv4.getPayload();
+		
+		
 		// TODO Updatear los contadores en la estructura de datos
-		// TODO Retornar verdadero si ya existia, falso si no existia.
-		return false;
+		
+		// START case ya existe el sujeto
+		if(macToSuspect.containsKey(eth.getSourceMACAddress())) { 	//Ya existe el sujeto
+		
+			PortScanSuspect sujeto = macToSuspect.get(eth.getSourceMACAddress());
+			
+			
+			// START bloque para el data externo
+			Data dataExterior = sujeto.getData();
+			
+			// Bloque para sumar 1 al contador SYN o ACK
+			if( tcp.getFlags() ==  (short) 0x02 ) { //Validar si es SYN
+				dataExterior.setSynCounter(dataExterior.getSynCounter() + 1);		//SUMAR +1
+			}
+			else if( tcp.getFlags() ==  (short) 0x0f ) { //Validar si es ACK
+				dataExterior.setSynAckCounter(dataExterior.getSynAckCounter() + 1); //SUMAR +1
+			}
+			
+			// Bloque para sumar 1 al contador de puerto destino TCP
+			if( dataExterior.getPort().containsKey(tcp.getDestinationPort().getPort())) { //VER si contiene el puerto destino
+				dataExterior.getPort().replace( tcp.getDestinationPort().getPort(), dataExterior.getPort().get(tcp.getDestinationPort().getPort())+1 ); // sumar +1
+			}else {
+				dataExterior.getPort().put(tcp.getDestinationPort().getPort(), 1); // Empezar el contador en 1
+			}
+			// END bloque para el data externo
+			
+			
+			
+			// START bloque para el data interno (pareja Source-Destino)
+			if(sujeto.getDestinos().containsKey(eth.getDestinationMACAddress())) { //checkear si existe ya una relacion src-dst
+				//START bloque para aumentar contadores
+				Data dataInterior = sujeto.getDestinos().get(eth.getDestinationMACAddress());
+				
+				// Bloque para sumar 1 al contador SYN o ACK
+				if( tcp.getFlags() ==  (short) 0x02 ) { //Validar si es SYN
+					dataInterior.setSynCounter(dataInterior.getSynCounter() + 1);		//SUMAR +1
+				}
+				else if( tcp.getFlags() ==  (short) 0x0f ) { //Validar si es ACK
+					dataInterior.setSynAckCounter(dataInterior.getSynAckCounter() + 1); //SUMAR +1
+				}
+				
+				// Bloque para sumar 1 al contador de puerto destino TCP
+				if( dataInterior.getPort().containsKey(tcp.getDestinationPort().getPort())) { //VER si contiene el puerto destino
+					dataInterior.getPort().replace( tcp.getDestinationPort().getPort(), dataInterior.getPort().get(tcp.getDestinationPort().getPort())+1 ); // sumar +1
+				}else {
+					dataInterior.getPort().put(tcp.getDestinationPort().getPort(), 1); // Empezar el contador en 1
+				}
+				// END bloque de 'ya existe relacion src-dst'
+				
+				// START bloque crear relacion src-dst
+			}else { // crear una relacion src-dst
+				Data dataInterior = new Data();
+				
+				Map<Integer,Integer> map = new HashMap<Integer,Integer>();
+				map.put(tcp.getDestinationPort().getPort(), 1);
+				dataInterior.setPort(map);
+				dataInterior.setStartTime(System.currentTimeMillis());
+				dataInterior.setSynCounter(0);
+				dataInterior.setSynAckCounter(0);
+				
+				if( tcp.getFlags() ==  (short) 0x02 ) { //Validar si es SYN
+					dataInterior.setSynCounter(1);		// Establecer en 1
+				}
+				else if( tcp.getFlags() ==  (short) 0x0f ) { //Validar si es ACK
+					dataInterior.setSynAckCounter(1); // Establecer en 1
+				}
+				
+				sujeto.getDestinos().put(eth.getDestinationMACAddress(), dataInterior);
+			}
+			// END bloque para el data interno
+			return true;
+		}
+		//END CASE ya existe el sujeto
+		
+		// START bloque crear sujeto
+		else {
+			PortScanSuspect sujeto = new PortScanSuspect();	
+		
+			// START Data Exterior
+			Data dataExterior = new Data();
+			dataExterior.setStartTime(System.currentTimeMillis());
+			//bloque para syn/synAck counters
+			dataExterior.setSynCounter(0);
+			dataExterior.setSynAckCounter(0);
+			
+			if( tcp.getFlags() ==  (short) 0x02 ) { //Validar si es SYN
+				dataExterior.setSynCounter(1);		//SET 1
+			}
+			else if( tcp.getFlags() ==  (short) 0x0f ) { //Validar si es ACK
+				dataExterior.setSynAckCounter(1); //SET 1
+			}
+			
+			Map<Integer,Integer> portMapExterior = new HashMap<Integer,Integer>();
+			portMapExterior.put(tcp.getDestinationPort().getPort(), 1);
+			dataExterior.setPort(portMapExterior);
+			sujeto.setData(dataExterior);
+			// FIN data exterior
+			
+			// Parte Interior ( relacion src-dst)
+			Map<MacAddress,Data> map = new HashMap<MacAddress,Data>();
+			Data dataInterior = new Data();
+			Map<Integer,Integer> portMapInterior = new HashMap<Integer,Integer>();
+			portMapInterior.put(tcp.getDestinationPort().getPort(), 1);
+			dataInterior.setStartTime(System.currentTimeMillis());
+			
+			dataInterior.setSynCounter(0);
+			dataInterior.setSynAckCounter(0);
+			
+			if( tcp.getFlags() ==  (short) 0x02 ) { //Validar si es SYN
+				dataInterior.setSynCounter(1);		//SET 1
+			}
+			else if( tcp.getFlags() ==  (short) 0x0f ) { //Validar si es ACK
+				dataInterior.setSynAckCounter(1); //SET 1
+			}
+			dataInterior.setPort(portMapInterior);
+			
+			
+			map.put(eth.getDestinationMACAddress(), dataInterior);
+			sujeto.setDestinos(map);
+			
+			macToSuspect.put(eth.getSourceMACAddress(), sujeto);
+			return false;
+			
+		}
 	}
 	
 	private boolean isMaliciousRequestsAttack() {
@@ -207,10 +334,5 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		
 		return false;
 	}
-
-	protected class Sujeto{
-		Map<MacAddress, Data> datos;
-	}
-
 
 }

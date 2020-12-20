@@ -8,14 +8,14 @@ public class Data {
     private Integer synCounter; // Contador de veces que se ha mandado un SYN
     private Integer synAckCounter; // Contador de veces que se ha respondido el SYN con Ack
     private long startTime;		// Contador de cuando se empezo a evaluar
-    private Map<TransportPort, Integer> portMap; // Mapea protocolos con contador: e.g. <SSH, 2> <ICMP, 100>
+    private Map<Integer, Integer> portMap; // Mapea protocolos con contador: e.g. <SSH, 2> <ICMP, 100>
 
 
-    public Map<TransportPort, Integer> getPort() {
+    public Map<Integer, Integer> getPort() {
 		return portMap;
 	}
 
-	public void setPort(Map<TransportPort, Integer> port) {
+	public void setPort(Map<Integer, Integer> port) {
 		this.portMap = port;
 	}
 
