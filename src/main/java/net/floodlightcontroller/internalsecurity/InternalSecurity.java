@@ -136,7 +136,11 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 		switch (msg.getType()) {
 			case PACKET_IN:
-				return processPacketIn(sw, (OFPacketIn)msg, cntx);
+				IRoutingDecision decision = null;
+				if (cntx != null) {
+					decision = IRoutingDecision.rtStore.get(cntx, IRoutingDecision.CONTEXT_DECISION);
+					return this.processPacketIn(sw, (OFPacketIn) msg, decision, cntx);
+				}
 			default:
 				break;
 		}
@@ -153,19 +157,19 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 	 * @param cntx The FloodlightContext for this message.
 	 * @return Command.CONTINUE if processing should be continued, Command.STOP otherwise.
 	 */
-	protected Command processPacketIn(IOFSwitch sw, OFPacketIn msg, FloodlightContext cntx) {
-		OFPacketIn pi  = (OFPacketIn) msg;
+	protected Command processPacketIn(IOFSwitch sw, OFPacketIn msg, IRoutingDecision decision, FloodlightContext cntx) {
 		Ethernet eth = IFloodlightProviderService.bcStore.get(cntx, IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
-		OFPort inPort = (pi.getVersion().compareTo(OFVersion.OF_12) < 0 ? pi.getInPort() : pi.getMatch().get(MatchField.IN_PORT));
+		OFPort inPort = (msg.getVersion().compareTo(OFVersion.OF_12) < 0 ? msg.getInPort() : msg.getMatch().get(MatchField.IN_PORT));
 
 		Command ret = Command.CONTINUE;
 
-		IRoutingDecision decision = null;
-		decision = IRoutingDecision.rtStore.get(cntx, IRoutingDecision.CONTEXT_DECISION);
 
 		log.info("PacketIn Processing on InternalSecurity");
 		
 		updateData(eth);
+
+		if (decision != null)
+			return ret;
 
 		if (isIpSpoofingAttack(eth, sw, msg)){
 			if (log.isTraceEnabled())
