@@ -184,7 +184,6 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 				log.trace("IPSpoofing detected at {} y {}",
 						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 
-			// TODO: ??
 			decision = new RoutingDecision(sw.getId(), inPort,
 					IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
 					IRoutingDecision.RoutingAction.DROP);
@@ -393,7 +392,8 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		IDevice device = it.hasNext()? it.next():null;
 
 		if (device == null ||
-				(device.getIPv4Addresses().length != 1) ||
+				(device.getIPv4Addresses().length == 0) ||
+				(device.getIPv4Addresses().length > 1) ||
 				!device.getIPv4Addresses()[0].equals(ip.getSourceAddress())
 		)
 		{
