@@ -1,16 +1,20 @@
 package net.floodlightcontroller.internalsecurity;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import net.floodlightcontroller.devicemanager.IDevice;
+import net.floodlightcontroller.devicemanager.internal.Device;
+import net.floodlightcontroller.packet.IPv4;
+import net.floodlightcontroller.packet.IPv6;
+import net.floodlightcontroller.routing.IRoutingDecision;
+import net.floodlightcontroller.routing.RoutingDecision;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFPacketIn;
 import org.projectfloodlight.openflow.protocol.OFType;
-import org.projectfloodlight.openflow.types.MacAddress;
+import org.projectfloodlight.openflow.protocol.OFVersion;
+import org.projectfloodlight.openflow.protocol.match.MatchField;
+import org.projectfloodlight.openflow.types.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,11 +35,12 @@ import net.floodlightcontroller.restserver.IRestApiService;
 
 
 public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
+	private static final Object ENABLED_STR = "enable";
 	protected static Logger log = LoggerFactory.getLogger(InternalSecurity.class);
 
 	private static final short APP_ID = 100;
 	static {
-		AppCookie.registerApp(APP_ID, "AntiPortScann");
+		AppCookie.registerApp(APP_ID, "InternalSecurity");
 	}
 
 	// Our dependencies
@@ -45,7 +50,10 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 
 	// Our internal state
+
 	protected Map<MacAddress, PortScanSuspect> macToSuspect; // <Mac origen, PortScanSuspect
+	private boolean isEnabled = false;
+
 
 
 	// IFloodlightModule
@@ -82,8 +90,20 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 			throws FloodlightModuleException {
 		floodlightProviderService = context.getServiceImpl(IFloodlightProviderService.class);
 		restApiService = context.getServiceImpl(IRestApiService.class);
-
+		deviceService = context.getServiceImpl(IDeviceService.class);
 		macToSuspect = new ConcurrentHashMap<>();
+
+		Map<String, String> config = context.getConfigParams(this);
+
+		if (config.containsKey(ENABLED_STR)) {
+			try {
+				isEnabled = Boolean.parseBoolean(config.get(ENABLED_STR).trim());
+			} catch (Exception e) {
+				log.error("Could not parse '{}'. Using default of {}", ENABLED_STR, isEnabled);
+			}
+		}
+		log.info("Internal Security {}", isEnabled ? "enabled" : "disabled");
+
 
 
 	}
@@ -114,9 +134,17 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 	@Override
 	public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
+		if (!this.isEnabled) {
+			return Command.CONTINUE;
+		}
+
 		switch (msg.getType()) {
 			case PACKET_IN:
-				return processPacketIn(sw, (OFPacketIn)msg, cntx);
+				IRoutingDecision decision = null;
+				if (cntx != null) {
+					decision = IRoutingDecision.rtStore.get(cntx, IRoutingDecision.CONTEXT_DECISION);
+					return this.processPacketIn(sw, (OFPacketIn) msg, decision, cntx);
+				}
 			default:
 				break;
 		}
@@ -133,19 +161,35 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 	 * @param cntx The FloodlightContext for this message.
 	 * @return Command.CONTINUE if processing should be continued, Command.STOP otherwise.
 	 */
-	protected Command processPacketIn(IOFSwitch sw, OFPacketIn msg, FloodlightContext cntx) {
+
+	protected Command processPacketIn(IOFSwitch sw, OFPacketIn msg, IRoutingDecision decision, FloodlightContext cntx) {
 		Ethernet eth = IFloodlightProviderService.bcStore.get(cntx, IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
-		Command ret = Command.STOP;
-		
+		OFPort inPort = (msg.getVersion().compareTo(OFVersion.OF_12) < 0 ? msg.getInPort() : msg.getMatch().get(MatchField.IN_PORT));
+
+		Command ret = Command.CONTINUE;
+
+
+		log.info("PacketIn Processing on InternalSecurity");
+
 		
 		updateData(eth);
 
-		if (isIpSpoofingAtack()){
+		if (decision != null){
+			log.info("Decision found");
+		}
+
+
+		if (isIpSpoofingAttack(eth, sw, msg, cntx)){
 			if (log.isTraceEnabled())
 				log.trace("IPSpoofing detected at {} y {}",
 						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 
 			// TODO: ??
+			decision = new RoutingDecision(sw.getId(), inPort,
+					IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
+					IRoutingDecision.RoutingAction.DROP);
+			decision.addToContext(cntx);
+			return Command.CONTINUE;
 
 		}
 		if (isPortScanningAttack()){
@@ -161,9 +205,6 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 			// TODO: ??
 
-		} else {
-			// OK
-			return Command.CONTINUE;
 		}
 
 		return ret;
@@ -173,8 +214,6 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		IPv4 ipv4 = (IPv4) eth.getPayload();
 		TCP tcp = (TCP) ipv4.getPayload();
 		
-		
-		// TODO Updatear los contadores en la estructura de datos
 		
 		// START case ya existe el sujeto
 		if(macToSuspect.containsKey(eth.getSourceMACAddress())) { 	//Ya existe el sujeto
@@ -330,8 +369,41 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		return false;
 	}
 
-	private boolean isIpSpoofingAtack() {
-		
+	private boolean isIpSpoofingAttack(Ethernet eth, IOFSwitch sw, OFPacketIn msg, FloodlightContext cntx) {
+		//is IPv4?
+		if (!eth.getEtherType().equals(EthType.IPv4))
+			return false;
+
+		IPv4 ip = (IPv4) eth.getPayload();
+
+		Iterator<? extends IDevice> it = deviceService.queryDevices(
+				eth.getSourceMACAddress(),
+				null,
+				IPv4Address.NONE,
+				IPv6Address.NONE,
+				sw.getId(),
+				OFPort.ZERO);
+
+		IDevice device = it.hasNext()? it.next():null;
+
+		if (device == null ||
+				(device.getIPv4Addresses().length != 1) ||
+				!device.getIPv4Addresses()[0].equals(ip.getSourceAddress())
+		)
+		{
+			if (device!=null && device.getIPv4Addresses().length > 0) {
+				ip.setSourceAddress(device.getIPv4Addresses()[0]);
+				eth.setPayload(ip);
+				IFloodlightProviderService.bcStore.put(
+						cntx,
+						IFloodlightProviderService.CONTEXT_PI_PAYLOAD,
+						eth);
+			}
+			log.info("IP Spoofing Attack detected: {}", ip.getSourceAddress());
+			return true;
+		}
+
+		log.info("Device exists. Not IP Spoofing Attack detected: {}", ip.getSourceAddress());
 		return false;
 	}
 
