@@ -11,6 +11,7 @@ import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFPacketIn;
 import org.projectfloodlight.openflow.protocol.OFType;
 import org.projectfloodlight.openflow.types.EthType;
+import org.projectfloodlight.openflow.types.IPv6Address;
 import org.projectfloodlight.openflow.types.MacAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -229,14 +230,13 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 			return false;
 
 		IPv4 ip = (IPv4) eth.getPayload();
-		IPv6 ip6 = (IPv6) eth.getPayload();
 
 		log.info("DEBUG: queryDevices in process");
 
 		Iterator<? extends IDevice> it = deviceService.queryDevices(eth.getSourceMACAddress(),
 				null,
 				ip.getSourceAddress(),
-				ip6.getSourceAddress(),
+				IPv6Address.NONE,
 				sw.getId(),
 				msg.getInPort());
 
