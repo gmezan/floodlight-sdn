@@ -172,7 +172,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		log.info("PacketIn Processing on InternalSecurity");
 
 		
-		updateData(eth);
+		updateData(eth);//falso si se crea un nuevo entry o si no es ipv4
 
 		if (decision != null){
 			log.info("Decision found");
@@ -211,7 +211,13 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 	}
 
 	private boolean updateData(Ethernet eth) {
+		//verificar si es IPv4
+		if (!eth.getEtherType().equals(EthType.IPv4))
+			return false;
 		IPv4 ipv4 = (IPv4) eth.getPayload();
+		//verificar si es TCP
+		if (!ipv4.getProtocol().equals(IpProtocol.TCP))
+			return false;
 		TCP tcp = (TCP) ipv4.getPayload();
 		
 		
