@@ -35,7 +35,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 	private static final short APP_ID = 100;
 	static {
-		AppCookie.registerApp(APP_ID, "AntiPortScann");
+		AppCookie.registerApp(APP_ID, "InternalSecurity");
 	}
 
 	// Our dependencies
