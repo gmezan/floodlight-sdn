@@ -231,16 +231,23 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		IPv4 ip = (IPv4) eth.getPayload();
 		IPv6 ip6 = (IPv6) eth.getPayload();
 
-		for (Iterator<? extends IDevice> it = deviceService.queryDevices(eth.getSourceMACAddress(),
+		log.info("DEBUG: queryDevices in process");
+
+		Iterator<? extends IDevice> it = deviceService.queryDevices(eth.getSourceMACAddress(),
 				null,
 				ip.getSourceAddress(),
 				ip6.getSourceAddress(),
 				sw.getId(),
-				msg.getInPort()); it.hasNext(); ) {
-			IDevice dev = (IDevice) it.next();
+				msg.getInPort());
+
+		log.info("DEBUG: queryDevices Done");
+
+		if (it.hasNext()){
+			IDevice dev = it.next();
 			log.info("Device exists. Not IP Spoofing Attack detected: {}", ip.getSourceAddress());
 			return false;
 		}
+
 		log.info("IP Spoofing Attack detected: {}", ip.getSourceAddress());
 		return true;
 	}
