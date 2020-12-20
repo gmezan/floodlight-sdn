@@ -262,7 +262,8 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		)
 		{
 			if (device!=null) {
-				((IPv4)eth.getPayload()).setSourceAddress(device.getIPv4Addresses()[0]);
+				ip.setSourceAddress(device.getIPv4Addresses()[0]);
+				eth.setPayload(ip);
 				IFloodlightProviderService.bcStore.put(
 						cntx,
 						IFloodlightProviderService.CONTEXT_PI_PAYLOAD,
