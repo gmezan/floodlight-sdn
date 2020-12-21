@@ -167,10 +167,6 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		OFPort inPort = (msg.getVersion().compareTo(OFVersion.OF_12) < 0 ? msg.getInPort() : msg.getMatch().get(MatchField.IN_PORT));
 
 		Command ret = Command.CONTINUE;
-
-
-		log.info("PacketIn Processing on InternalSecurity");
-
 		
 		updateData(eth);//falso si se crea un nuevo entry o si no es ipv4
 
@@ -191,18 +187,22 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 			return Command.CONTINUE;
 
 		}
-		if (isPortScanningAttack()){
+		if (isPortScanningAttack(eth,sw,msg,cntx)){
 			if (log.isTraceEnabled())
 				log.trace("PortScanning detected at {} y {}",
 						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
-			// TODO: ??
+			
+			decision = new RoutingDecision(sw.getId(), inPort, 
+					IDeviceService.fcStore.get(cntx,IDeviceService.CONTEXT_SRC_DEVICE), 
+					IRoutingDecision.RoutingAction.DROP);
+			decision.addToContext(cntx);
+			return Command.CONTINUE;
 
 		}
 		if (isMaliciousRequestsAttack()){
 			if (log.isTraceEnabled())
 				log.trace("MaliciousRequests detected at {} y {}",
 						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
-			// TODO: ??
 
 		}
 
@@ -349,28 +349,32 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		return false;
 	}
 
-	private boolean isPortScanningAttack() {
+	private boolean isPortScanningAttack(
+			Ethernet eth, IOFSwitch sw, OFPacketIn msg, FloodlightContext cntx) {
 		
-		// 1. caso TCP SYN
-
-				// Revisar si la MAC origen está en el MAP de contadores SYN
-
-				//	hostToTimestamp.put(eth.getSourceMACAddress(), System.currentTimeMillis());
-
-				// Si no está, agregarlo al map de contadores SYN, SYN-ACK y al de tiempo (con la hora actual)
-
-				// si está, revisar si está dentro de la ventana de analisis, si no está en la ventana de análsis borrarlo del map
-
-				// si está en la ventana de análisis, revisar si longitud(SYN)-longitud(SYN-ACK)> THRESHOLD
-
-				// si es TRUE, continuear el pipeline, si es FALSE, DROP
-
-				// 2. Caso TCP SYN-ACK
-
-				// Revisar si la MAC origen están al MAP de contadores SYN
-
-				// Si está, incrementar el contador SYN-ACK
+		if(macToSuspect.containsKey(eth.getSourceMACAddress())) {
 		
+			PortScanSuspect sospechoso = macToSuspect.get(eth.getSourceMACAddress());
+			Data informacion = sospechoso.getData();
+			
+			int contadorSYN = informacion.getSynCounter(); 
+			int contadorACK = informacion.getSynAckCounter(); 
+			int diferencia = contadorSYN - contadorACK; 
+			int threshold = 5; // MODIFICAR
+			
+			long windowTime = System.currentTimeMillis() - informacion.getStartTime(); //// 
+			long metric = windowTime/contadorSYN;
+			int threshold2 = 20; // MODIFICAR 
+			
+			if (diferencia > threshold || metric > threshold2 )
+				
+			{ log.info("Port Scanning Attack detected: {}", eth.getSourceMACAddress());
+				return true;}
+
+			log.info("No Port Scanning Attack detected: {}",eth.getSourceMACAddress());
+			return false;
+				
+		}
 		return false;
 	}
 
