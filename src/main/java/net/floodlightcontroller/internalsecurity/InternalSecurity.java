@@ -346,6 +346,8 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 	}
 	
 	private boolean isMaliciousRequestsAttack() {
+		//No es parte del lab5
+
 		return false;
 	}
 
