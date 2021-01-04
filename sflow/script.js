@@ -27,23 +27,42 @@ setEventHandler(function(evt) {
  if(controls[evt.flowKey]) return;
 
  var [ipdestination,udpsourceport] = evt.flowKey.split(',');
- var msg = {
-  priority:40000,
-  dpid:parseInt(port.dpid,16),
-  match: {
-   in_port:port.ofport,
-   dl_type:0x800,
-   nw_dst:ipdestination+'/32',
-   nw_proto:17,
-   tp_src:udpsourceport 
-  }
+ 
+ var flow = {
+	switch: parseInt(port.dpid,16),
+	name: "flow_for_mitigate",
+	priority: "40000",
+	in_port: port.ofport
+	dl_type:"0x800",
+	ipv4_dst: ipdestination+"/32",
+	ip_proto : "17"
+	active : true
+	
+	//"ip_proto": "0x11",
+	//"ipv4_src": "10.0.0.1",
+	
+	//"active": "true",
+	//"actions": "push_vlan = 0x8100,set-field=eth_vlan_vid->0x09AA, output=1"
  };
+ //var msg = {
+ // priority:40000,
+ // dpid:parseInt(port.dpid,16),
+ // match: {
+ //  in_port:port.ofport,
+  // dl_type:0x800,
+  // nw_dst:ipdestination+'/32',
+  // nw_proto:17,
+ //  tp_src:udpsourceport 
+//  }
+ //};
 
  var resp = http2({
-  url:'http://'+floodlight+':8080/stats/flowentry/add',
+ //url:'http://'+floodlight+':8080/stats/flowentry/add',
+  url:'http://'+floodlight+':8080/wm/staticflowpusher/json',
   headers:{'Content-Type':'application/json','Accept':'application/json'},
   operation:'post',
-  body: JSON.stringify(msg)
+  body: JSON.stringify(flow)
+  //body: JSON.stringify(msg)
  });
 
  controls[evt.flowKey] = {
@@ -51,7 +70,8 @@ setEventHandler(function(evt) {
   threshold:evt.thresholdID,
   agent:evt.agent,
   metric:evt.dataSource+'.'+evt.metric,
-  msg:msg
+  flow:flow
+  //msg:msg
  };
 
  logInfo("blocking " + evt.flowKey);
@@ -69,10 +89,12 @@ setIntervalHandler(function() {
   if(thresholdTriggered(rec.threshold,rec.agent,rec.metric,key)) continue;
 
   var resp = http2({
-   url:'http://'+floodlight+':8080/stats/flowentry/delete',
+   //url:'http://'+floodlight+':8080/stats/flowentry/delete',
+   url:'http://'+floodlight+':8080/wm/staticflowpusher/json'
    headers:{'Content-Type':'application/json','Accept':'application/json'},
-   operation:'post',
-   body: JSON.stringify(rec.msg)
+   operation:'delete',
+   //body: JSON.stringify(rec.msg)
+   body: JSON.stringify(rec.flow)
   });
 
   delete controls[key];
