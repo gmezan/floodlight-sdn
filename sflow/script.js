@@ -29,7 +29,7 @@ setEventHandler(function(evt) {
  var [ipdestination,udpsourceport] = evt.flowKey.split(',');
  
  var flow = {
-	switch: parseInt(port.dpid,16),
+	switch: port.dpid,
 	name: "flow_for_mitigate",
 	priority: "40000",
 	in_port: port.ofport,
@@ -90,7 +90,7 @@ setIntervalHandler(function() {
 
   var resp = http2({
    //url:'http://'+floodlight+':8080/stats/flowentry/delete',
-   url:'http://'+floodlight+':8080/wm/staticflowpusher/json'
+   url:'http://'+floodlight+':8080/wm/staticflowpusher/json',
    headers:{'Content-Type':'application/json','Accept':'application/json'},
    operation:'delete',
    //body: JSON.stringify(rec.msg)
