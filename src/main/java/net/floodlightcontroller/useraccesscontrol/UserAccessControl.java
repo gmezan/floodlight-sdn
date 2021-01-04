@@ -102,9 +102,11 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
                 eth_src = eth.getSourceMACAddress().toString();
             }
 
-            User user = userDao.findUserByIpAndMac(ip_src, eth_src);
+            User user_src = userDao.findUserByIpAndMac(ip_src, eth_src);
+            User user_dst = userDao.findUserByIpAndMac(ip_dest, ip_src);
 
-            switch (userRoutingDecision.getAction(user)){
+
+            switch (userRoutingDecision.getAction(user_src, user_dst)){
                 case DENY:
                     decision = new RoutingDecision(sw.getId(), inPort,
                             IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
@@ -117,7 +119,7 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
                             IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
                             IRoutingDecision.RoutingAction.FORWARD);
                     decision.addToContext(cntx);
-                    logger.info("Allowing access to flow from {} to {}", "("+user.getFullname()+")", "("+ip_dest+","+ eth_dest+")");
+                    logger.info("Allowing access to flow from {} to {}", "("+ip_src+","+eth_src+")", "("+ip_dest+","+ eth_dest+")");
                     break;
                 case BLOCK:
                     break;

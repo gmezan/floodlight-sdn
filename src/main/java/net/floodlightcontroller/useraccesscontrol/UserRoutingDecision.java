@@ -13,9 +13,9 @@ public class UserRoutingDecision {
 
 
 
-    public UserRoutingAction getAction(User user) {
+    public UserRoutingAction getAction(User user_src, User user_dest) {
 
-        if (user != null)
+        if (user_src != null || user_dest !=null)
             return UserRoutingAction.ALLOW;
 
         return UserRoutingAction.DENY;
