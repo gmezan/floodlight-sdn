@@ -1,4 +1,4 @@
-var floodlight = '127.0.0.1';
+var floodlight = '172.31.64.45';
 var controls = {};
 
 //console.log("loggg");
