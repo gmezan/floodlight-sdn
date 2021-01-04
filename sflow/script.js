@@ -1,4 +1,4 @@
-var ryu = '127.0.0.1';
+var floodlight = '127.0.0.1';
 var controls = {};
 
 //console.log("loggg");
@@ -40,7 +40,7 @@ setEventHandler(function(evt) {
  };
 
  var resp = http2({
-  url:'http://'+ryu+':8080/stats/flowentry/add',
+  url:'http://'+floodlight+':8080/stats/flowentry/add',
   headers:{'Content-Type':'application/json','Accept':'application/json'},
   operation:'post',
   body: JSON.stringify(msg)
@@ -69,7 +69,7 @@ setIntervalHandler(function() {
   if(thresholdTriggered(rec.threshold,rec.agent,rec.metric,key)) continue;
 
   var resp = http2({
-   url:'http://'+ryu+':8080/stats/flowentry/delete',
+   url:'http://'+floodlight+':8080/stats/flowentry/delete',
    headers:{'Content-Type':'application/json','Accept':'application/json'},
    operation:'post',
    body: JSON.stringify(rec.msg)

@@ -57,7 +57,7 @@ public class UserDao extends Dao{
 
     public User findUserByIpAndMac(String ip, String mac){
         // Only Active users
-        User user = new User();
+        User user = null;
         String query = "select u.code, u.fullname, u.idrol, u.active, u.active_timestamp, u.ip,\n" +
                 "       u.mac, u.attachment_point from floodlight.user u where u.mac=? and u.ip=? limit 1";
 
@@ -68,6 +68,9 @@ public class UserDao extends Dao{
             pstmt.setString(2, ip);
             try(ResultSet rs = pstmt.executeQuery();) {
                 while (rs.next()){
+
+                    user = new User();
+
                     user.setCode(rs.getInt(1));
                     user.setFullname(rs.getString(2));
                     user.setIdrol(rs.getInt(3));

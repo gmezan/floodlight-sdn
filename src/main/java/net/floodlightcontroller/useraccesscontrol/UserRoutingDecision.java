@@ -13,8 +13,12 @@ public class UserRoutingDecision {
 
 
 
-    public UserRoutingAction getAction(User eth) {
-        return UserRoutingAction.ALLOW;
+    public UserRoutingAction getAction(User user) {
+
+        if (user != null)
+            return UserRoutingAction.ALLOW;
+
+        return UserRoutingAction.DENY;
     }
 
     public void setAction(UserRoutingAction action) {
