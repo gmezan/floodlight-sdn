@@ -33,7 +33,7 @@ setEventHandler(function(evt) {
 	name: "flow_for_mitigate",
 	priority: "40000",
 	in_port: port.ofport,
-	dl_type:"0x800",
+	eth_type:"0x800",
 	ipv4_dst: ipdestination+"/32",
 	ip_proto : "17",
 	active : true
