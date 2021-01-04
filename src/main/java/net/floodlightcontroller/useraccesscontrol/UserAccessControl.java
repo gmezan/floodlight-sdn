@@ -171,7 +171,7 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
         floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
         logger = LoggerFactory.getLogger(UserAccessControl.class);
         userRoutingDecision = new UserRoutingDecision();
-        userDao = new UserDao();
+        userDao = new UserDao(logger);
     }
 
     @Override
