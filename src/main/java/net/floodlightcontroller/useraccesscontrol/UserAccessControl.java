@@ -97,6 +97,8 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
                 IPv4 ip = (IPv4) eth.getPayload();
                 ip_dest = ip.getDestinationAddress().toString();
                 ip_src = ip.getSourceAddress().toString();
+                eth_dest = eth.getDestinationMACAddress().toString();
+                eth_src = eth.getSourceMACAddress().toString();
             }
 
             switch (userRoutingDecision.getAction(eth)){
@@ -112,7 +114,7 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
                             IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
                             IRoutingDecision.RoutingAction.FORWARD);
                     decision.addToContext(cntx);
-                    logger.info("Allowing access to flow from {} to {}"+ip_src+","+eth_src+")", "("+ip_dest+","+ eth_dest+")");
+                    logger.info("Allowing access to flow from {} to {}", "("+ip_src+","+eth_src+")", "("+ip_dest+","+ eth_dest+")");
                     break;
                 case BLOCK:
                     break;
