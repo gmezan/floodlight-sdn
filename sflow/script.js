@@ -41,12 +41,6 @@ setEventHandler(function(evt) {
        ipv4_dst: ipdestination+"/32",
        ip_proto : "17",
        active : true
-
-       //"ip_proto": "0x11",
-       //"ipv4_src": "10.0.0.1",
-
-       //"active": "true",
-       //"actions": "push_vlan = 0x8100,set-field=eth_vlan_vid->0x09AA, output=1"
     };
     //var msg = {
     // priority:40000,
