@@ -19,6 +19,7 @@ import org.projectfloodlight.openflow.protocol.OFPacketIn;
 import org.projectfloodlight.openflow.protocol.OFType;
 import org.projectfloodlight.openflow.protocol.OFVersion;
 import org.projectfloodlight.openflow.protocol.match.MatchField;
+import org.projectfloodlight.openflow.types.EthType;
 import org.projectfloodlight.openflow.types.IPv4Address;
 import org.projectfloodlight.openflow.types.OFPort;
 import org.slf4j.Logger;
@@ -91,21 +92,27 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
         if (decision == null) {
             // verify the packet
 
-            userRoutingDecision.verify();
+            String ip_dest = "", ip_src = "";
+            if (eth.getEtherType().equals(EthType.IPv4)) {
+                IPv4 ip = (IPv4) eth.getPayload();
+                ip_dest = ip.getDestinationAddress().toString();
+                ip_src = ip.getSourceAddress().toString();
+            }
+
             switch (userRoutingDecision.getAction()){
                 case DENY:
                     decision = new RoutingDecision(sw.getId(), inPort,
                             IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
-                            IRoutingDecision.RoutingAction.UAC_DROP);
+                            IRoutingDecision.RoutingAction.DROP);
                     decision.addToContext(cntx);
-                    logger.info("Denying access to flow with PacketIn={}", pi);
+                    logger.info("Denying access to flow from {} to {}", ip_src, ip_dest);
                     break;
                 case ALLOW:
                     decision = new RoutingDecision(sw.getId(), inPort,
                             IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
-                            IRoutingDecision.RoutingAction.UAC_FORWARD);
+                            IRoutingDecision.RoutingAction.FORWARD);
                     decision.addToContext(cntx);
-                    logger.info("Allowing access to flow with PacketIn={}", pi);
+                    logger.info("Allowing access to flow from {} to {}", ip_src, ip_dest);
                     break;
                 case BLOCK:
                     break;
