@@ -14,6 +14,7 @@ import net.floodlightcontroller.packet.IPv4;
 import net.floodlightcontroller.routing.IRoutingDecision;
 import net.floodlightcontroller.routing.RoutingDecision;
 import net.floodlightcontroller.useraccesscontrol.dao.UserDao;
+import net.floodlightcontroller.useraccesscontrol.entity.Server;
 import net.floodlightcontroller.useraccesscontrol.entity.User;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFPacketIn;
@@ -93,15 +94,17 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
         if (decision == null) {
             // verify the packet
             UserRoutingDecision.UserRoutingAction action;
-            String ip_dest = "", ip_src = "", eth_dest = "", eth_src="";
+            String ip_dest = "", ip_src = "",
+                    eth_dest = eth.getDestinationMACAddress().toString(),
+                    eth_src = eth.getSourceMACAddress().toString();
             if (eth.getEtherType().equals(EthType.IPv4)) {
                 IPv4 ip = (IPv4) eth.getPayload();
                 ip_dest = ip.getDestinationAddress().toString();
                 ip_src = ip.getSourceAddress().toString();
-                eth_dest = eth.getDestinationMACAddress().toString();
-                eth_src = eth.getSourceMACAddress().toString();
                 User user_src = userDao.findUserByIpAndMac(ip_src, eth_src);
                 User user_dst = userDao.findUserByIpAndMac(ip_dest, eth_dest);
+                Server server_src = userDao.findServerByIpAndMac(ip_src, eth_src);
+                Server server_dst = userDao.findServerByIpAndMac(ip_dest, eth_dest);
 
                 action = userRoutingDecision.getAction(user_src, user_dst);
             }

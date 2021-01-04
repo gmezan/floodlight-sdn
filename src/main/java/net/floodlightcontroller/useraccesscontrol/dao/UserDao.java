@@ -1,5 +1,6 @@
 package net.floodlightcontroller.useraccesscontrol.dao;
 
+import net.floodlightcontroller.useraccesscontrol.entity.Server;
 import net.floodlightcontroller.useraccesscontrol.entity.User;
 import org.slf4j.Logger;
 
@@ -90,6 +91,35 @@ public class UserDao extends Dao{
             throwable.printStackTrace();
         }
         return user;
+    }
+
+    public Server findServerByIpAndMac(String ip, String mac){
+        // Only Active users
+        Server server = null;
+        String query = "select s.idserver, s.name, s.ip, s.mac from floodlight.server s where s.ip=? and s.mac=? limit 1";
+
+        try(Connection connection = getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(query);
+        ) {
+            pstmt.setString(1, ip);
+            pstmt.setString(2, mac);
+            try(ResultSet rs = pstmt.executeQuery();) {
+                while (rs.next()){
+
+                    server = new Server();
+                    server.setIdserver(rs.getInt(1));
+                    server.setName(rs.getString(2));
+                    server.setIp(rs.getString(3));
+                    server.setMac(rs.getString(4));
+
+                    logger.info("Server found: {}", server.getName());
+
+                }
+            }
+        } catch (SQLException throwable) {
+            throwable.printStackTrace();
+        }
+        return server;
     }
 
 
