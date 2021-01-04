@@ -16,8 +16,9 @@ public class UserDao extends Dao{
         this.logger = log;
         try (Connection conn = getConnection()) {
             logger.info("Database connection successful");
+            /*
             User user = findUser(20161505);
-            logger.info("User found: {}", user.getFullname());
+            logger.info("User found: {}", user.getFullname());*/
         } catch (SQLException e) {
             logger.error("Database connection error");
             e.printStackTrace();

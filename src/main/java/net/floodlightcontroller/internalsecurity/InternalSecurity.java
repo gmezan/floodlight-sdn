@@ -105,7 +105,6 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		log.info("Internal Security {}", isEnabled ? "enabled" : "disabled");
 
 
-
 	}
 
 	@Override
@@ -129,7 +128,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 	@Override
 	public boolean isCallbackOrderingPostreq(OFType type, String name) {
 		// We need to go before forwarding
-		return (type.equals(OFType.PACKET_IN) && name.equals("forwarding"));
+		return (type.equals(OFType.PACKET_IN) && name.equals("useraccesscontrol"));
 	}
 
 	@Override
@@ -168,13 +167,13 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 		Command ret = Command.CONTINUE;
 		
-		updateData(eth);//falso si se crea un nuevo entry o si no es ipv4
+		//updateData(eth);//falso si se crea un nuevo entry o si no es ipv4
 
 		if (decision != null){
 			log.info("Decision found");
 		}
 
-
+		// Just IP Spoofing Attack scanner
 		if (isIpSpoofingAttack(eth, sw, msg, cntx)){
 			if (log.isTraceEnabled())
 				log.trace("IPSpoofing detected at {} y {}",
@@ -187,6 +186,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 			return Command.CONTINUE;
 
 		}
+		/*
 		if (isPortScanningAttack(eth,sw,msg,cntx)){
 			if (log.isTraceEnabled())
 				log.trace("PortScanning detected at {} y {}",
@@ -204,7 +204,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 				log.trace("MaliciousRequests detected at {} y {}",
 						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 
-		}
+		}*/
 
 		return ret;
 	}
