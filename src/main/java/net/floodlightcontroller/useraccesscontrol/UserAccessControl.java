@@ -103,8 +103,8 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
                 ip_src = ip.getSourceAddress().toString();
                 User user_src = userDao.findUserByIpAndMac(ip_src, eth_src);
                 User user_dst = userDao.findUserByIpAndMac(ip_dest, eth_dest);
-                Server server_src = userDao.findServerByIpAndMac(ip_src, eth_src);
-                Server server_dst = userDao.findServerByIpAndMac(ip_dest, eth_dest);
+                //Server server_src = userDao.findServerByIpAndMac(ip_src, eth_src);
+                //Server server_dst = userDao.findServerByIpAndMac(ip_dest, eth_dest);
 
                 action = userRoutingDecision.getAction(user_src, user_dst);
             }
@@ -174,7 +174,7 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
         floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
         logger = LoggerFactory.getLogger(UserAccessControl.class);
         userRoutingDecision = new UserRoutingDecision();
-        userDao = new UserDao(logger);
+        userDao = new UserDao();
     }
 
     @Override

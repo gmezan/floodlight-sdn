@@ -9,19 +9,16 @@ import java.sql.*;
 public class UserDao extends Dao{
 
     protected Connection connection;
-    protected Logger logger;
 
-    public UserDao(){}
-
-    public UserDao(Logger log){
-        this.logger = log;
+    public UserDao(){
+        //this.logger = log;
         try (Connection conn = getConnection()) {
-            logger.info("Database connection successful");
-            /*
+            /*logger.info("Database connection successful");
+
             User user = findUser(20161505);
             logger.info("User found: {}", user.getFullname());*/
         } catch (SQLException e) {
-            logger.error("Database connection error");
+            //logger.error("Database connection error");
             e.printStackTrace();
         }
 
@@ -83,8 +80,6 @@ public class UserDao extends Dao{
                     user.setMac(rs.getString(7));
                     user.setAttachment_point(rs.getString(8));
 
-                    logger.info("User found: {}", user.getFullname());
-
                 }
             }
         } catch (SQLException throwable) {
@@ -111,8 +106,6 @@ public class UserDao extends Dao{
                     server.setName(rs.getString(2));
                     server.setIp(rs.getString(3));
                     server.setMac(rs.getString(4));
-
-                    logger.info("Server found: {}", server.getName());
 
                 }
             }
