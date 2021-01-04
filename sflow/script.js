@@ -55,7 +55,7 @@ setEventHandler(function(evt) {
  //  tp_src:udpsourceport 
 //  }
  //};
-
+logInfo(flow.switch);
  var resp = http2({
  //url:'http://'+floodlight+':8080/stats/flowentry/add',
   url:'http://'+floodlight+':8080/wm/staticflowpusher/json',
