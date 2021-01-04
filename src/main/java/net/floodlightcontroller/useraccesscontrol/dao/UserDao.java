@@ -81,6 +81,9 @@ public class UserDao extends Dao{
                     user.setIp(rs.getString(6));
                     user.setMac(rs.getString(7));
                     user.setAttachment_point(rs.getString(8));
+
+                    logger.info("User found: {}", user.getFullname());
+
                 }
             }
         } catch (SQLException throwable) {
