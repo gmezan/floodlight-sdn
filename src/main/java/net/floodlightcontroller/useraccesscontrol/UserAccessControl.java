@@ -93,18 +93,22 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
         if (decision == null) {
             // verify the packet
             UserRoutingDecision.UserRoutingAction action;
-            String ip_dest = "", ip_src = "";
-            String eth_dest = eth.getDestinationMACAddress().toString();
-            String eth_src = eth.getSourceMACAddress().toString();
+            String ip_dest = "", ip_src = "", eth_dest = "", eth_src="";
             if (eth.getEtherType().equals(EthType.IPv4)) {
                 IPv4 ip = (IPv4) eth.getPayload();
                 ip_dest = ip.getDestinationAddress().toString();
                 ip_src = ip.getSourceAddress().toString();
-                action = userRoutingDecision.getAction(eth);
+                eth_dest = eth.getDestinationMACAddress().toString();
+                eth_src = eth.getSourceMACAddress().toString();
+                User user_src = userDao.findUserByIpAndMac(ip_src, eth_src);
+                User user_dst = userDao.findUserByIpAndMac(ip_dest, eth_dest);
+
+                action = userRoutingDecision.getAction(user_src, user_dst);
             }
             else {
                 action = UserRoutingDecision.UserRoutingAction.ALLOW;
             }
+
 
             switch (action){
                 case DENY:
@@ -166,8 +170,8 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
     public void init(FloodlightModuleContext context) throws FloodlightModuleException {
         floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
         logger = LoggerFactory.getLogger(UserAccessControl.class);
-        userRoutingDecision = new UserRoutingDecision(logger);
-        //Logger log
+        userRoutingDecision = new UserRoutingDecision();
+        userDao = new UserDao();
     }
 
     @Override
