@@ -58,8 +58,31 @@ public class UserDao extends Dao{
     public User findUserByIpAndMac(String ip, String mac){
         // Only Active users
         User user = new User();
-        String query = "";
+        String query = "select u.code, u.fullname, u.idrol, u.active, u.active_timestamp, u.ip,\n" +
+                "       u.mac, u.attachment_point from floodlight.user u where u.mac=? and u.ip=? limit 1";
 
+        try(Connection connection = getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(query);
+        ) {
+            pstmt.setString(1, mac);
+            pstmt.setString(2, ip);
+            try(ResultSet rs = pstmt.executeQuery();) {
+                while (rs.next()){
+                    user.setCode(rs.getInt(1));
+                    user.setFullname(rs.getString(2));
+                    user.setIdrol(rs.getInt(3));
+                    user.setActive(rs.getBoolean(4));
+                    Timestamp timestamp = rs.getTimestamp(5);
+                    if (timestamp!=null) user.setActive_timestamp(timestamp.toLocalDateTime());
+                    else user.setActive_timestamp(null);
+                    user.setIp(rs.getString(6));
+                    user.setMac(rs.getString(7));
+                    user.setAttachment_point(rs.getString(8));
+                }
+            }
+        } catch (SQLException throwable) {
+            throwable.printStackTrace();
+        }
         return user;
     }
 

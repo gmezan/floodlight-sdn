@@ -1,6 +1,7 @@
 package net.floodlightcontroller.useraccesscontrol;
 
 import net.floodlightcontroller.packet.Ethernet;
+import net.floodlightcontroller.useraccesscontrol.entity.User;
 
 public class UserRoutingDecision {
 
@@ -12,7 +13,7 @@ public class UserRoutingDecision {
 
 
 
-    public UserRoutingAction getAction(Ethernet eth) {
+    public UserRoutingAction getAction(User eth) {
         return UserRoutingAction.ALLOW;
     }
 

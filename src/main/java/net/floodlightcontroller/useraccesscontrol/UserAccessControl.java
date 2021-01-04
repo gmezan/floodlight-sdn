@@ -14,6 +14,7 @@ import net.floodlightcontroller.packet.IPv4;
 import net.floodlightcontroller.routing.IRoutingDecision;
 import net.floodlightcontroller.routing.RoutingDecision;
 import net.floodlightcontroller.useraccesscontrol.dao.UserDao;
+import net.floodlightcontroller.useraccesscontrol.entity.User;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFPacketIn;
 import org.projectfloodlight.openflow.protocol.OFType;
@@ -101,13 +102,15 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
                 eth_src = eth.getSourceMACAddress().toString();
             }
 
-            switch (userRoutingDecision.getAction(eth)){
+            User user = userDao.findUserByIpAndMac(ip_src, eth_src);
+
+            switch (userRoutingDecision.getAction(user)){
                 case DENY:
                     decision = new RoutingDecision(sw.getId(), inPort,
                             IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
                             IRoutingDecision.RoutingAction.DROP);
                     decision.addToContext(cntx);
-                    logger.info("Denying access to flow from {} to {}", "("+ip_src+","+eth_src+")", "("+ip_dest+","+ eth_dest+")");
+                    logger.info("Denying access to flow from {} to {}", "("+user.getFullname()+")", "("+ip_dest+","+ eth_dest+")");
                     break;
                 case ALLOW:
                     decision = new RoutingDecision(sw.getId(), inPort,
