@@ -1,6 +1,6 @@
-FROM java:8
-WORKDIR /floodlight/
-ADD ./ /floodlight/
-EXPOSE 8080
-CMD java -jar target/floodlight.jar
+FROM openjdk:8-jre-alpine
+WORKDIR /floodlight-sdn/
+COPY ./ /floodlight-sdn/
+CMD ["/usr/bin/java", "-jar", "target/floodlight.jar"]
+
 
