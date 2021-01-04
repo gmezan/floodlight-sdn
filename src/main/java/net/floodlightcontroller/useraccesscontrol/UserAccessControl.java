@@ -92,7 +92,7 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
         // check if we have a matching rule for this packet/flow and no decision has been made yet
         if (decision == null) {
             // verify the packet
-
+            UserRoutingDecision.UserRoutingAction action;
             String ip_dest = "", ip_src = "", eth_dest = "", eth_src="";
             if (eth.getEtherType().equals(EthType.IPv4)) {
                 IPv4 ip = (IPv4) eth.getPayload();
@@ -100,13 +100,17 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
                 ip_src = ip.getSourceAddress().toString();
                 eth_dest = eth.getDestinationMACAddress().toString();
                 eth_src = eth.getSourceMACAddress().toString();
+                User user_src = userDao.findUserByIpAndMac(ip_src, eth_src);
+                User user_dst = userDao.findUserByIpAndMac(ip_dest, ip_src);
+
+                action = userRoutingDecision.getAction(user_src, user_dst);
+            }
+            else {
+                action = UserRoutingDecision.UserRoutingAction.ALLOW;
             }
 
-            User user_src = userDao.findUserByIpAndMac(ip_src, eth_src);
-            User user_dst = userDao.findUserByIpAndMac(ip_dest, ip_src);
 
-
-            switch (userRoutingDecision.getAction(user_src, user_dst)){
+            switch (action){
                 case DENY:
                     decision = new RoutingDecision(sw.getId(), inPort,
                             IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
