@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 
 public abstract class Dao {
 
-    protected final String SOCKET = "localhost:3306";
+    protected final String SOCKET = "172.31.64.45:3306";
     protected final String DB_NAME = "floodlight";
     protected final String USER = "root";
     protected final String PASSWORD = "root";
