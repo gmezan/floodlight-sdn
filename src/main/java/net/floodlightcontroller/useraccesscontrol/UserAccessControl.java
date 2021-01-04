@@ -101,7 +101,7 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
                 eth_dest = eth.getDestinationMACAddress().toString();
                 eth_src = eth.getSourceMACAddress().toString();
                 User user_src = userDao.findUserByIpAndMac(ip_src, eth_src);
-                User user_dst = userDao.findUserByIpAndMac(ip_dest, ip_src);
+                User user_dst = userDao.findUserByIpAndMac(ip_dest, eth_dest);
 
                 action = userRoutingDecision.getAction(user_src, user_dst);
             }
