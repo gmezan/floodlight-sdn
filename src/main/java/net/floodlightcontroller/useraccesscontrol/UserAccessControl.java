@@ -92,27 +92,27 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
         if (decision == null) {
             // verify the packet
 
-            String ip_dest = "", ip_src = "";
+            String ip_dest = "", ip_src = "", eth_dest = "", eth_src="";
             if (eth.getEtherType().equals(EthType.IPv4)) {
                 IPv4 ip = (IPv4) eth.getPayload();
                 ip_dest = ip.getDestinationAddress().toString();
                 ip_src = ip.getSourceAddress().toString();
             }
 
-            switch (userRoutingDecision.getAction()){
+            switch (userRoutingDecision.getAction(eth)){
                 case DENY:
                     decision = new RoutingDecision(sw.getId(), inPort,
                             IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
                             IRoutingDecision.RoutingAction.DROP);
                     decision.addToContext(cntx);
-                    logger.info("Denying access to flow from {} to {}", ip_src, ip_dest);
+                    logger.info("Denying access to flow from {} to {}", "("+ip_src+","+eth_src+")", "("+ip_dest+","+ eth_dest+")");
                     break;
                 case ALLOW:
                     decision = new RoutingDecision(sw.getId(), inPort,
                             IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
                             IRoutingDecision.RoutingAction.FORWARD);
                     decision.addToContext(cntx);
-                    logger.info("Allowing access to flow from {} to {}", ip_src, ip_dest);
+                    logger.info("Allowing access to flow from {} to {}"+ip_src+","+eth_src+")", "("+ip_dest+","+ eth_dest+")");
                     break;
                 case BLOCK:
                     break;

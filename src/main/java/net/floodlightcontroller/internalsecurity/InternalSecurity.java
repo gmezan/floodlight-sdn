@@ -167,11 +167,11 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 		Command ret = Command.CONTINUE;
 		
-		//updateData(eth);//falso si se crea un nuevo entry o si no es ipv4
+		/*updateData(eth);//falso si se crea un nuevo entry o si no es ipv4
 
 		if (decision != null){
 			log.info("Decision found");
-		}
+		}*/
 
 		// Just IP Spoofing Attack scanner
 		if (isIpSpoofingAttack(eth, sw, msg, cntx)){
