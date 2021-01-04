@@ -1,5 +1,6 @@
 package net.floodlightcontroller.useraccesscontrol.dao;
 
+import net.floodlightcontroller.useraccesscontrol.entity.Server;
 import net.floodlightcontroller.useraccesscontrol.entity.User;
 import org.slf4j.Logger;
 
@@ -8,19 +9,16 @@ import java.sql.*;
 public class UserDao extends Dao{
 
     protected Connection connection;
-    protected Logger logger;
 
-    public UserDao(){}
-
-    public UserDao(Logger log){
-        this.logger = log;
+    public UserDao(){
+        //this.logger = log;
         try (Connection conn = getConnection()) {
-            logger.info("Database connection successful");
-            /*
+            /*logger.info("Database connection successful");
+
             User user = findUser(20161505);
             logger.info("User found: {}", user.getFullname());*/
         } catch (SQLException e) {
-            logger.error("Database connection error");
+            //logger.error("Database connection error");
             e.printStackTrace();
         }
 
@@ -81,12 +79,40 @@ public class UserDao extends Dao{
                     user.setIp(rs.getString(6));
                     user.setMac(rs.getString(7));
                     user.setAttachment_point(rs.getString(8));
+
                 }
             }
         } catch (SQLException throwable) {
             throwable.printStackTrace();
         }
         return user;
+    }
+
+    public Server findServerByIpAndMac(String ip, String mac){
+        // Only Active users
+        Server server = null;
+        String query = "select s.idserver, s.name, s.ip, s.mac from floodlight.server s where s.ip=? and s.mac=? limit 1";
+
+        try(Connection connection = getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(query);
+        ) {
+            pstmt.setString(1, ip);
+            pstmt.setString(2, mac);
+            try(ResultSet rs = pstmt.executeQuery();) {
+                while (rs.next()){
+
+                    server = new Server();
+                    server.setIdserver(rs.getInt(1));
+                    server.setName(rs.getString(2));
+                    server.setIp(rs.getString(3));
+                    server.setMac(rs.getString(4));
+
+                }
+            }
+        } catch (SQLException throwable) {
+            throwable.printStackTrace();
+        }
+        return server;
     }
 
 

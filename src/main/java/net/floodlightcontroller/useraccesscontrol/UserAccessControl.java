@@ -14,6 +14,7 @@ import net.floodlightcontroller.packet.IPv4;
 import net.floodlightcontroller.routing.IRoutingDecision;
 import net.floodlightcontroller.routing.RoutingDecision;
 import net.floodlightcontroller.useraccesscontrol.dao.UserDao;
+import net.floodlightcontroller.useraccesscontrol.entity.Server;
 import net.floodlightcontroller.useraccesscontrol.entity.User;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFPacketIn;
@@ -92,32 +93,40 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
         // check if we have a matching rule for this packet/flow and no decision has been made yet
         if (decision == null) {
             // verify the packet
-
-            String ip_dest = "", ip_src = "", eth_dest = "", eth_src="";
+            UserRoutingDecision.UserRoutingAction action;
+            String ip_dest = "", ip_src = "",
+                    eth_dest = eth.getDestinationMACAddress().toString(),
+                    eth_src = eth.getSourceMACAddress().toString();
             if (eth.getEtherType().equals(EthType.IPv4)) {
                 IPv4 ip = (IPv4) eth.getPayload();
                 ip_dest = ip.getDestinationAddress().toString();
                 ip_src = ip.getSourceAddress().toString();
-                eth_dest = eth.getDestinationMACAddress().toString();
-                eth_src = eth.getSourceMACAddress().toString();
+                User user_src = userDao.findUserByIpAndMac(ip_src, eth_src);
+                User user_dst = userDao.findUserByIpAndMac(ip_dest, eth_dest);
+                //Server server_src = userDao.findServerByIpAndMac(ip_src, eth_src);
+                //Server server_dst = userDao.findServerByIpAndMac(ip_dest, eth_dest);
+
+                action = userRoutingDecision.getAction(user_src, user_dst);
+            }
+            else {
+                action = UserRoutingDecision.UserRoutingAction.ALLOW;
             }
 
-            User user = userDao.findUserByIpAndMac(ip_src, eth_src);
 
-            switch (userRoutingDecision.getAction(user)){
+            switch (action){
                 case DENY:
                     decision = new RoutingDecision(sw.getId(), inPort,
                             IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
                             IRoutingDecision.RoutingAction.DROP);
                     decision.addToContext(cntx);
-                    logger.info("Denying access to flow from {} to {}", "("+user.getFullname()+")", "("+ip_dest+","+ eth_dest+")");
+                    logger.info("Denying access to flow from {} to {}", "("+ip_src+","+eth_src+")", "("+ip_dest+","+ eth_dest+")");
                     break;
                 case ALLOW:
                     decision = new RoutingDecision(sw.getId(), inPort,
                             IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
                             IRoutingDecision.RoutingAction.FORWARD);
                     decision.addToContext(cntx);
-                    logger.info("Allowing access to flow from {} to {}", "("+user.getFullname()+")", "("+ip_dest+","+ eth_dest+")");
+                    logger.info("Allowing access to flow from {} to {}", "("+ip_src+","+eth_src+")", "("+ip_dest+","+ eth_dest+")");
                     break;
                 case BLOCK:
                     break;
@@ -164,9 +173,8 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
     public void init(FloodlightModuleContext context) throws FloodlightModuleException {
         floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
         logger = LoggerFactory.getLogger(UserAccessControl.class);
-        userDao = new UserDao(logger);
         userRoutingDecision = new UserRoutingDecision();
-
+        userDao = new UserDao();
     }
 
     @Override
