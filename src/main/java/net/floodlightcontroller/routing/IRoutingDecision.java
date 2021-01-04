@@ -42,8 +42,9 @@ public interface IRoutingDecision {
          * MULTICAST:               Multicast this packet to all the interfaces
          *                          and devices attached
          */
-        NONE, DROP, FORWARD, FORWARD_OR_FLOOD, MULTICAST
+        NONE, DROP, FORWARD, FORWARD_OR_FLOOD, MULTICAST,     UAC_FORWARD, UAC_DROP
     }
+    //TODO: UAC_FORWARD, UAC_DROP for UAC
 
     public static final FloodlightContextStore<IRoutingDecision> rtStore =
         new FloodlightContextStore<IRoutingDecision>();

@@ -75,6 +75,8 @@ import org.projectfloodlight.openflow.types.VlanVid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static net.floodlightcontroller.useraccesscontrol.UserAccessControl.FLOWMOD_IDLE_TIMEOUT_UAC;
+
 public class Forwarding extends ForwardingBase implements IFloodlightModule, IOFSwitchListener {
 	protected static Logger log = LoggerFactory.getLogger(Forwarding.class);
 
@@ -86,7 +88,7 @@ public class Forwarding extends ForwardingBase implements IFloodlightModule, IOF
 			if (log.isTraceEnabled()) {
 				log.trace("Forwarding decision={} was made for PacketIn={}", decision.getRoutingAction().toString(), pi);
 			}
-
+			int tmp;
 			switch(decision.getRoutingAction()) {
 			case NONE:
 				// don't do anything
@@ -101,6 +103,18 @@ public class Forwarding extends ForwardingBase implements IFloodlightModule, IOF
 				return Command.CONTINUE;
 			case DROP:
 				doDropFlow(sw, pi, decision, cntx);
+				return Command.CONTINUE;
+			case UAC_FORWARD: // TODO: for UAC
+				tmp = FLOWMOD_DEFAULT_IDLE_TIMEOUT;
+				FLOWMOD_DEFAULT_IDLE_TIMEOUT = FLOWMOD_IDLE_TIMEOUT_UAC;
+				doForwardFlow(sw, pi, cntx, true);
+				FLOWMOD_DEFAULT_IDLE_TIMEOUT = tmp;
+				return Command.CONTINUE;
+			case UAC_DROP: // TODO: for UAC
+				tmp = FLOWMOD_DEFAULT_IDLE_TIMEOUT;
+				FLOWMOD_DEFAULT_IDLE_TIMEOUT = FLOWMOD_IDLE_TIMEOUT_UAC;
+				doDropFlow(sw, pi, decision, cntx);
+				FLOWMOD_DEFAULT_IDLE_TIMEOUT = tmp;
 				return Command.CONTINUE;
 			default:
 				log.error("Unexpected decision made for this packet-in={}", pi, decision.getRoutingAction());
@@ -324,6 +338,9 @@ public class Forwarding extends ForwardingBase implements IFloodlightModule, IOF
 			doFlood(sw, pi, cntx);
 		}
 	}
+
+
+
 
 	/**
 	 * Instead of using the Firewall's routing decision Match, which might be as general
