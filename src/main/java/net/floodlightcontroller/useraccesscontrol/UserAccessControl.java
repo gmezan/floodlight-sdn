@@ -47,6 +47,10 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
 
     @Override
     public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
+        if (!this.isEnabled) {
+            return Command.CONTINUE;
+        }
+
         switch (msg.getType()) {
             case PACKET_IN:
                 IRoutingDecision decision = null;
