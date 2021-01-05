@@ -435,10 +435,11 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 			int threshold = 5; // MODIFICAR
 			
 			long windowTime = System.currentTimeMillis() - informacion.getStartTime(); //// 
+			long metric;
 			if(windowTime == 0)
-				long metric = (long)0;
+				metric= (long)0;
 			else
-				long metric = contadorSYN/windowTime;
+				metric = contadorSYN/windowTime;
 
 			int threshold2 = 20; // MODIFICAR 
 			
