@@ -38,7 +38,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 	private static final Object ENABLED_STR = "enable";
 	private static final Integer MRA_TRESHOLD_MAX_DST = 200;
 	private static final Integer MRA_TRESHOLD_MAX_SRC = 20;
-	private static final Integer MRA_COUNTER_TIMER = 5000; //ms
+	private static final Integer MRA_COUNTER_TIMER = 250; //ms
 	
 	protected static Logger log = LoggerFactory.getLogger(InternalSecurity.class);
 
