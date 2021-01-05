@@ -441,14 +441,13 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 			if(windowTime == 0)
 				metric= (long)0;
 			else
-				metric = contadorSYN/windowTime;
+				metric = (contadorSYN*1000)/windowTime;
 
 			int threshold2 = 20; // MODIFICAR 
 
-            log.info("metric: {}, windowtime: {}", metric, windowTime);
+            log.info("metric: "+metric+", windowtime: {}, diferencia: {}", windowTime, diferencia);
 
 			if (diferencia > threshold || metric > threshold2 )
-
 			{ //log.info("Port Scanning Attack detected: {}", eth.getSourceMACAddress());
 				return true;}
 

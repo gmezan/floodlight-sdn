@@ -137,7 +137,7 @@ public class Forwarding extends ForwardingBase implements IFloodlightModule, IOF
     protected void doDropAllFlow(IOFSwitch sw, OFPacketIn pi, IRoutingDecision decision, FloodlightContext cntx) {
         OFPort inPort = (pi.getVersion().compareTo(OFVersion.OF_12) < 0 ? pi.getInPort() : pi.getMatch().get(MatchField.IN_PORT));
         Ethernet eth = IFloodlightProviderService.bcStore.get(cntx, IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
-        log.info("DROPING PORT SCANNING");
+        log.info("DROPPING PORT SCANNING");
         /*
         Match m = createMatchFromPacket(sw, inPort, cntx);
         OFFlowMod.Builder fmb = sw.getOFFactory().buildFlowAdd(); // this will be a drop-flow; a flow that will not output to any ports
