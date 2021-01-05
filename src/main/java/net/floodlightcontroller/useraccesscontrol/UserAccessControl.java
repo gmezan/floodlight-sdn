@@ -64,6 +64,15 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
         OFPort inPort = (pi.getVersion().compareTo(OFVersion.OF_12) < 0 ? pi.getInPort() : pi.getMatch().get(MatchField.IN_PORT));
         // Allowing L2 broadcast + ARP broadcast request (also deny malformed
         // broadcasts -> L2 broadcast + L3 unicast)
+
+        if (decision!=null)
+        switch(decision.getRoutingAction()) {
+            case DROP:
+                return Command.CONTINUE;
+            case DROP_ALL:
+                return Command.CONTINUE;
+        }
+
         if (eth.isBroadcast()) {
             boolean allowBroadcast = true;
             // the case to determine if we have L2 broadcast + L3 unicast (L3 broadcast default set to /24 or 255.255.255.0)

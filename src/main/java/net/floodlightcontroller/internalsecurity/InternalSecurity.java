@@ -179,8 +179,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		// Just IP Spoofing Attack scanner
 		/*
 		if (isIpSpoofingAttack(eth, sw, msg, cntx)){
-				log.info("IPSpoofing detected at {} y {}",
-						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
+				log.info("IPSpoofing detected at {} y {}", new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 
 			decision = new RoutingDecision(sw.getId(), inPort,
 					IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
@@ -191,8 +190,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		}
 */		
 		if (isPortScanningAttack(eth,sw,msg,cntx)){
-				log.info("PortScanning detected at {} y {}",
-						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
+				//log.info("PortScanning detected at {} y {}", new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 			
 			/*
 				Bloquear todo el tráfico del source 
@@ -206,8 +204,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 		}
 		if (isMaliciousRequestsAttack(eth)){
-				log.info("MaliciousRequests detected at {} y {}",
-						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
+				//log.info("MaliciousRequests detected at {} y {}", new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 			
 
 			decision = new RoutingDecision(sw.getId(), inPort, 
