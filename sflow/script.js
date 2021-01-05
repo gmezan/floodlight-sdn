@@ -26,7 +26,7 @@ setEventHandler(function(evt) {
    var count = 0;
    for (var i = 0; i < port.dpid.length; i++) {
       aux += port.dpid.charAt(i);
-      if (count === 1) {
+      if (count === 1 && (i !== (port.dpid.length-1))) {
          count = 0;
          aux += ":";
       } else {
@@ -38,7 +38,7 @@ setEventHandler(function(evt) {
    port.dpid = aux;
 
     // need OpenFlow info to create Ryu filtering rule
-    logInfo("port.dpid: " + port.dpid +"\nport.ofport: "+ port.ofport+"\n");
+    logInfo("port.dpid: " + port.dpid +"\nport.ofport: "+ port.ofport);
 
    var aux = "";
    var count = 0;
