@@ -49,14 +49,9 @@ import net.floodlightcontroller.util.OFDPAUtils;
 import net.floodlightcontroller.util.OFPortMode;
 import net.floodlightcontroller.util.OFPortModeTuple;
 
-import org.projectfloodlight.openflow.protocol.OFFlowMod;
-import org.projectfloodlight.openflow.protocol.OFFlowModCommand;
-import org.projectfloodlight.openflow.protocol.OFGroupType;
-import org.projectfloodlight.openflow.protocol.OFPacketIn;
-import org.projectfloodlight.openflow.protocol.OFPacketOut;
-import org.projectfloodlight.openflow.protocol.OFPortDesc;
-import org.projectfloodlight.openflow.protocol.OFVersion;
+import org.projectfloodlight.openflow.protocol.*;
 import org.projectfloodlight.openflow.protocol.action.OFAction;
+import org.projectfloodlight.openflow.protocol.action.OFActionOutput;
 import org.projectfloodlight.openflow.protocol.match.Match;
 import org.projectfloodlight.openflow.protocol.match.MatchField;
 import org.projectfloodlight.openflow.types.DatapathId;
@@ -116,6 +111,8 @@ public class Forwarding extends ForwardingBase implements IFloodlightModule, IOF
 				doDropFlow(sw, pi, decision, cntx);
 				FLOWMOD_DEFAULT_IDLE_TIMEOUT = tmp;
 				return Command.CONTINUE;
+            case DROP_ALL:
+                doDropAllFlow(sw, pi, decision, cntx);
 			default:
 				log.error("Unexpected decision made for this packet-in={}", pi, decision.getRoutingAction());
 				return Command.CONTINUE;
@@ -134,6 +131,53 @@ public class Forwarding extends ForwardingBase implements IFloodlightModule, IOF
 
 		return Command.CONTINUE;
 	}
+
+    protected void doDropAllFlow(IOFSwitch sw, OFPacketIn pi, IRoutingDecision decision, FloodlightContext cntx) {
+        OFPort inPort = (pi.getVersion().compareTo(OFVersion.OF_12) < 0 ? pi.getInPort() : pi.getMatch().get(MatchField.IN_PORT));
+        Ethernet eth = IFloodlightProviderService.bcStore.get(cntx, IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
+        /*
+        Match m = createMatchFromPacket(sw, inPort, cntx);
+        OFFlowMod.Builder fmb = sw.getOFFactory().buildFlowAdd(); // this will be a drop-flow; a flow that will not output to any ports
+        List<OFAction> actions = new ArrayList<OFAction>(); // set no action to drop
+        U64 cookie = AppCookie.makeCookie(FORWARDING_APP_ID, 0);
+        log.info("Droppingggg All");
+        fmb.setCookie(cookie)
+                .setHardTimeout(FLOWMOD_DEFAULT_HARD_TIMEOUT)
+                .setIdleTimeout(FLOWMOD_DEFAULT_IDLE_TIMEOUT)
+                .setBufferId(OFBufferId.NO_BUFFER)
+                .setMatch(m)
+                .setPriority(FLOWMOD_DEFAULT_PRIORITY);
+
+        FlowModUtils.setActions(fmb, actions, sw);*/
+
+        try {
+            OFFlowAdd.Builder flow = sw.getOFFactory().buildFlowAdd();
+            Match.Builder match = sw.getOFFactory().buildMatch();
+
+            match.setExact(MatchField.IN_PORT, inPort);
+            match.setExact(MatchField.ETH_TYPE, eth.getEtherType());
+            if(eth.getEtherType().equals(EthType.IPv4)) {
+                IPv4 ip = (IPv4) eth.getPayload();
+                match.setExact(MatchField.IPV4_DST, ip.getDestinationAddress());
+                match.setExact(MatchField.IPV4_SRC, ip.getSourceAddress());
+            }
+            match.setExact(MatchField.ETH_DST, eth.getDestinationMACAddress());
+            match.setExact(MatchField.ETH_SRC, eth.getSourceMACAddress());
+
+            flow.setHardTimeout(0);
+            flow.setIdleTimeout(30);
+            flow.setMatch(match.build());
+            flow.setPriority(32767);
+
+            boolean dampened = messageDamper.write(sw, flow.build());
+            log.debug("OFMessage dampened: {}", dampened);
+        } catch (IOException e) {
+            log.error("Failure writing drop flow mod", e);
+        }
+
+
+
+    }
 
 	protected void doDropFlow(IOFSwitch sw, OFPacketIn pi, IRoutingDecision decision, FloodlightContext cntx) {
 		OFPort inPort = (pi.getVersion().compareTo(OFVersion.OF_12) < 0 ? pi.getInPort() : pi.getMatch().get(MatchField.IN_PORT));
@@ -220,8 +264,6 @@ public class Forwarding extends ForwardingBase implements IFloodlightModule, IOF
 			}
 		}
 		//TODO: LAB4
-
-
 	}
 
 	protected void doForwardFlow(IOFSwitch sw, OFPacketIn pi, FloodlightContext cntx, boolean requestFlowRemovedNotifn) {
