@@ -437,12 +437,16 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 			PortScanSuspect sospechoso = macToSuspect.get(eth.getSourceMACAddress());
 			Data informacion = sospechoso.getData();
 			
+			if ((System.currentTimeMillis() - informacion.getStartTime()) > 1800) {
+            	informacion.setStartTime(System.currentTimeMillis());
+            	informacion.setSynCounter(0);
+            	informacion.setSynAckCounter(0);
+            }
 			int contadorSYN = informacion.getSynCounter(); 
 			int contadorACK = informacion.getSynAckCounter(); 
 			int diferencia = contadorSYN - contadorACK; 
 			int threshold = 5; // MODIFICAR
-
-            //if ((System.currentTimeMillis() - informacion.getStartTime()) > 5000) informacion.setStartTime(System.currentTimeMillis());
+            
 
 			long windowTime = System.currentTimeMillis() - informacion.getStartTime(); ////
 			long metric;
