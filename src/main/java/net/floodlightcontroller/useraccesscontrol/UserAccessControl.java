@@ -32,7 +32,7 @@ import java.util.Collection;
 import java.util.Map;
 
 public class UserAccessControl implements IOFMessageListener, IFloodlightModule {
-
+    private static final Object ENABLED_STR = "enable";
     protected IFloodlightProviderService floodlightProvider;
     protected static Logger logger;
     protected UserDao userDao;
@@ -40,6 +40,8 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
 
     public static final int FLOWMOD_IDLE_TIMEOUT_UAC = 30;
     public static final int FLOWMOD_HARD_TIMEOUT_UAC = 30;
+
+    private boolean isEnabled = false;
 
     protected IPv4Address subnet_mask = IPv4Address.of("255.255.255.0");
 
@@ -184,6 +186,18 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
         logger = LoggerFactory.getLogger(UserAccessControl.class);
         userRoutingDecision = new UserRoutingDecision();
         userDao = new UserDao();
+
+        Map<String, String> config = context.getConfigParams(this);
+
+        if (config.containsKey(ENABLED_STR)) {
+            try {
+                isEnabled = Boolean.parseBoolean(config.get(ENABLED_STR).trim());
+            } catch (Exception e) {
+                logger.error("Could not parse '{}'. Using default of {}", ENABLED_STR, isEnabled);
+            }
+        }
+        logger.info("User Access Control {}", isEnabled ? "enabled" : "disabled");
+
     }
 
     @Override
