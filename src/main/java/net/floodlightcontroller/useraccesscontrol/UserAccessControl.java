@@ -15,6 +15,7 @@ import net.floodlightcontroller.routing.IRoutingDecision;
 import net.floodlightcontroller.routing.RoutingDecision;
 import net.floodlightcontroller.useraccesscontrol.dao.UserDao;
 import net.floodlightcontroller.useraccesscontrol.entity.Server;
+import net.floodlightcontroller.useraccesscontrol.entity.Service;
 import net.floodlightcontroller.useraccesscontrol.entity.User;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFPacketIn;
@@ -29,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 public class UserAccessControl implements IOFMessageListener, IFloodlightModule {
@@ -108,34 +110,8 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
         // check if we have a matching rule for this packet/flow and no decision has been made yet
         if (decision == null) {
             // verify the packet
-            UserRoutingDecision.UserRoutingAction action;
-            String ip_dest = "", ip_src = "",
-                    eth_dest = eth.getDestinationMACAddress().toString(),
-                    eth_src = eth.getSourceMACAddress().toString();
-            if (eth.getEtherType().equals(EthType.IPv4)) {
-                IPv4 ip = (IPv4) eth.getPayload();
-                ip_dest = ip.getDestinationAddress().toString();
-                ip_src = ip.getSourceAddress().toString();
-                User user_src = userDao.findUserByIpAndMac(ip_src, eth_src);
-                User user_dst = userDao.findUserByIpAndMac(ip_dest, eth_dest);
-                Server server_src = userDao.findServerByIpAndMac(ip_src, eth_src);
-                Server server_dst = userDao.findServerByIpAndMac(ip_dest, eth_dest);
 
-                User user = (user_src != null) ? user_src: user_dst;
-                Server server = (server_src != null) ? server_src: server_dst;
-
-                if (user == null || server==null ){
-                    action = UserRoutingDecision.UserRoutingAction.DENY;
-                }
-                else {
-                    action = UserRoutingDecision.UserRoutingAction.ALLOW;
-                }
-            }
-            else {
-                action = UserRoutingDecision.UserRoutingAction.ALLOW;
-            }
-
-            switch (action){
+            switch (getAction(eth)){
                 case DENY:
                     decision = new RoutingDecision(sw.getId(), inPort,
                             IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
@@ -157,6 +133,40 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
 
         return Command.CONTINUE;
     }
+
+    private UserRoutingDecision.UserRoutingAction getAction(Ethernet eth) {
+        UserRoutingDecision.UserRoutingAction action;
+        String ip_dest = "", ip_src = "",
+                eth_dest = eth.getDestinationMACAddress().toString(),
+                eth_src = eth.getSourceMACAddress().toString();
+        if (eth.getEtherType().equals(EthType.IPv4)) {
+            IPv4 ip = (IPv4) eth.getPayload();
+            ip_dest = ip.getDestinationAddress().toString();
+            ip_src = ip.getSourceAddress().toString();
+            User user_src = userDao.findUserByIpAndMac(ip_src, eth_src);
+            User user_dst = userDao.findUserByIpAndMac(ip_dest, eth_dest);
+            Server server_src = userDao.findServerByIpAndMac(ip_src, eth_src);
+            Server server_dst = userDao.findServerByIpAndMac(ip_dest, eth_dest);
+            User user = (user_src != null) ? user_src: user_dst;
+            Server server = (server_src != null) ? server_src: server_dst;
+
+            if (user == null || server == null )
+                 return UserRoutingDecision.UserRoutingAction.DENY;
+
+            // SO FAR: user <-> server communication confirmed
+            List<Service> services = userDao.findServices(user, server);
+
+            if (services.isEmpty())
+                return UserRoutingDecision.UserRoutingAction.DENY;
+
+
+
+        }
+        action = UserRoutingDecision.UserRoutingAction.ALLOW;
+
+        return action;
+    }
+
 
     @Override
     public String getName() {

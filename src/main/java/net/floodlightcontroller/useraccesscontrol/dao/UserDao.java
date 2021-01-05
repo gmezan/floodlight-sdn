@@ -1,10 +1,13 @@
 package net.floodlightcontroller.useraccesscontrol.dao;
 
 import net.floodlightcontroller.useraccesscontrol.entity.Server;
+import net.floodlightcontroller.useraccesscontrol.entity.Service;
 import net.floodlightcontroller.useraccesscontrol.entity.User;
 import org.slf4j.Logger;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UserDao extends Dao{
 
@@ -114,6 +117,40 @@ public class UserDao extends Dao{
         }
         return server;
     }
+
+    public List<Service> findServices(User user, Server server){
+        // Only Active users
+        Service service = null;
+        List<Service> services = new ArrayList<>();
+        String query = "SELECT s.idservice, s.name, s.port, s.protocol FROM floodlight.course c inner join floodlight.course_has_service chs on (c.idcourse = chs.idcourse)\n" +
+                " inner join floodlight.service s on (chs.idservice = s.idservice) \n" +
+                " inner join floodlight.user_has_course uhc on (uhc.idcourse = c.idcourse) \n" +
+                " where c.status = \"DICTANDO\" and uhc.code=? and s.idserver=?";
+
+        try(Connection connection = getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(query);
+        ) {
+            pstmt.setInt(1, user.getCode());
+            pstmt.setInt(2, server.getIdserver());
+            try(ResultSet rs = pstmt.executeQuery();) {
+                while (rs.next()){
+
+                    service = new Service();
+                    service.setIdserver(server.getIdserver());
+                    service.setIdservice(rs.getInt(1));
+                    service.setName(rs.getString(2));
+                    service.setPort(rs.getInt(3));
+                    service.setProtocol(rs.getString(4));
+                    services.add(service);
+
+                }
+            }
+        } catch (SQLException throwable) {
+            throwable.printStackTrace();
+        }
+        return services;
+    }
+
 
 
 
