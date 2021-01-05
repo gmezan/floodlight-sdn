@@ -188,13 +188,12 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 			return Command.CONTINUE;
 
 		}
-*/		
+
 		if (isPortScanningAttack(eth,sw,msg,cntx)){
 				log.info("PortScanning detected at {} y {}", new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 			
-			/*
-				Bloquear todo el tráfico del source 
-			*/
+			//	Bloquear todo el tráfico del source
+
 
 			decision = new RoutingDecision(sw.getId(), inPort, 
 					IDeviceService.fcStore.get(cntx,IDeviceService.CONTEXT_SRC_DEVICE), 
@@ -203,6 +202,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 			return Command.CONTINUE;
 
 		}
+		*/
 		if (isMaliciousRequestsAttack(eth)){
 				//log.info("MaliciousRequests detected at {} y {}", new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 			
