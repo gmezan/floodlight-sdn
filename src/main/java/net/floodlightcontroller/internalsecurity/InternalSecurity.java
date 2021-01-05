@@ -57,7 +57,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 	protected Map<MacAddress, PortScanSuspect> macToSuspect; // <Mac origen, PortScanSuspect
 	private boolean isEnabled = false;
-	private Map<String, Map<String,Object[]>> ipDstToData; // Tiene todos los datos para Malicious Request DDoS
+	private Map<String, Map<String,Object[]>> ipDstToData = new HashMap<>(); // Tiene todos los datos para Malicious Request DDoS
 	//[0] para el contador (Integer), [1] para el tiempo (long) 
 
 
@@ -134,7 +134,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 	@Override
 	public boolean isCallbackOrderingPostreq(OFType type, String name) {
 		// We need to go before forwarding
-		return (type.equals(OFType.PACKET_IN) && name.equals("useraccesscontrol"));
+		return (type.equals(OFType.PACKET_IN) && name.equals("forwarding"));
 	}
 
 	@Override
@@ -177,10 +177,9 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 
 		// Just IP Spoofing Attack scanner
+		/*
 		if (isIpSpoofingAttack(eth, sw, msg, cntx)){
-			if (log.isTraceEnabled())
-				log.info("IPSpoofing detected at {} y {}",
-						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
+				log.info("IPSpoofing detected at {} y {}", new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 
 			decision = new RoutingDecision(sw.getId(), inPort,
 					IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
@@ -189,24 +188,25 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 			return Command.CONTINUE;
 
 		}
-		
+*/		
 		if (isPortScanningAttack(eth,sw,msg,cntx)){
-			if (log.isTraceEnabled())
-				log.info("PortScanning detected at {} y {}",
-						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
+				log.info("PortScanning detected at {} y {}", new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 			
+			/*
+				Bloquear todo el tráfico del source 
+			*/
+
 			decision = new RoutingDecision(sw.getId(), inPort, 
 					IDeviceService.fcStore.get(cntx,IDeviceService.CONTEXT_SRC_DEVICE), 
-					IRoutingDecision.RoutingAction.DROP);
+					IRoutingDecision.RoutingAction.DROP_ALL);
 			decision.addToContext(cntx);
 			return Command.CONTINUE;
 
 		}
 		if (isMaliciousRequestsAttack(eth)){
-			if (log.isTraceEnabled())
-				log.info("MaliciousRequests detected at {} y {}",
-						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
+				//log.info("MaliciousRequests detected at {} y {}", new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 			
+
 			decision = new RoutingDecision(sw.getId(), inPort, 
 					IDeviceService.fcStore.get(cntx,IDeviceService.CONTEXT_SRC_DEVICE), 
 					IRoutingDecision.RoutingAction.DROP);
@@ -437,15 +437,20 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 			int threshold = 5; // MODIFICAR
 			
 			long windowTime = System.currentTimeMillis() - informacion.getStartTime(); //// 
-			long metric = windowTime/contadorSYN;
+			long metric;
+			if(windowTime == 0)
+				metric= (long)0;
+			else
+				metric = contadorSYN/windowTime;
+
 			int threshold2 = 20; // MODIFICAR 
 			
 			if (diferencia > threshold || metric > threshold2 )
 				
-			{ log.info("Port Scanning Attack detected: {}", eth.getSourceMACAddress());
+			{ //log.info("Port Scanning Attack detected: {}", eth.getSourceMACAddress());
 				return true;}
 
-			log.info("No Port Scanning Attack detected: {}",eth.getSourceMACAddress());
+			//log.info("No Port Scanning Attack detected: {}",eth.getSourceMACAddress());
 			return false;
 				
 		}
@@ -475,11 +480,11 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 				!device.getIPv4Addresses()[0].equals(ip.getSourceAddress())
 		)
 		{
-			log.info("IP Spoofing Attack detected: {}", ip.getSourceAddress());
+			//log.info("IP Spoofing Attack detected: {}", ip.getSourceAddress());
 			return true;
 		}
 
-		log.info("Device exists. Not IP Spoofing Attack detected: {}", ip.getSourceAddress());
+		//log.info("Device exists. Not IP Spoofing Attack detected: {}", ip.getSourceAddress());
 		return false;
 	}
 
