@@ -134,14 +134,14 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
                             IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
                             IRoutingDecision.RoutingAction.FORWARD);
                     decision.addToContext(cntx);
-                    //logger.info("Denying access to flow from {} to {}", "("+ip_src+","+eth_src+")", "("+ip_dest+","+ eth_dest+")");
+                    logger.info("Denying access to flow from {} to {}", "("+ip_src+","+eth_src+")", "("+ip_dest+","+ eth_dest+")");
                     break;
                 case ALLOW:
                     decision = new RoutingDecision(sw.getId(), inPort,
                             IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
-                            IRoutingDecision.RoutingAction.FORWARD);
+                            IRoutingDecision.RoutingAction.DROP);
                     decision.addToContext(cntx);
-                    //logger.info("Allowing access to flow from {} to {}", "("+ip_src+","+eth_src+")", "("+ip_dest+","+ eth_dest+")");
+                    logger.info("Allowing access to flow from {} to {}", "("+ip_src+","+eth_src+")", "("+ip_dest+","+ eth_dest+")");
                     break;
                 case BLOCK:
                     break;
