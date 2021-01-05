@@ -151,31 +151,28 @@ public class Forwarding extends ForwardingBase implements IFloodlightModule, IOF
 
         FlowModUtils.setActions(fmb, actions, sw);*/
 
-        try {
-            OFFlowAdd.Builder flow = sw.getOFFactory().buildFlowAdd();
-            Match.Builder match = sw.getOFFactory().buildMatch();
+        OFFlowAdd.Builder flow = sw.getOFFactory().buildFlowAdd();
+        Match.Builder match = sw.getOFFactory().buildMatch();
 
-            match.setExact(MatchField.IN_PORT, inPort);
-            match.setExact(MatchField.ETH_TYPE, eth.getEtherType());
-            if(eth.getEtherType().equals(EthType.IPv4)) {
-                log.info("DROPING ALL IP");
-                IPv4 ip = (IPv4) eth.getPayload();
-                match.setExact(MatchField.IPV4_DST, ip.getDestinationAddress());
-                match.setExact(MatchField.IPV4_SRC, ip.getSourceAddress());
-            }
-            match.setExact(MatchField.ETH_DST, eth.getDestinationMACAddress());
-            match.setExact(MatchField.ETH_SRC, eth.getSourceMACAddress());
-
-            flow.setHardTimeout(0);
-            flow.setIdleTimeout(30);
-            flow.setMatch(match.build());
-            flow.setPriority(32767);
-
-            boolean dampened = sw.write(flow.build());
-            log.debug("OFMessage dampened: {}", dampened);
-        } catch (IOException e) {
-            log.error("Failure writing drop flow mod", e);
+        match.setExact(MatchField.IN_PORT, inPort);
+        match.setExact(MatchField.ETH_TYPE, eth.getEtherType());
+        if(eth.getEtherType().equals(EthType.IPv4)) {
+            log.info("DROPING ALL IP");
+            IPv4 ip = (IPv4) eth.getPayload();
+            match.setExact(MatchField.IPV4_DST, ip.getDestinationAddress());
+            match.setExact(MatchField.IPV4_SRC, ip.getSourceAddress());
         }
+        match.setExact(MatchField.ETH_DST, eth.getDestinationMACAddress());
+        match.setExact(MatchField.ETH_SRC, eth.getSourceMACAddress());
+
+        flow.setHardTimeout(0);
+        flow.setIdleTimeout(30);
+        flow.setMatch(match.build());
+        flow.setPriority(32767);
+
+        boolean dampened = sw.write(flow.build());
+        log.debug("OFMessage dampened: {}", dampened);
+
 
 
 
