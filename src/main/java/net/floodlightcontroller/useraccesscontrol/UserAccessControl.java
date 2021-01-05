@@ -74,6 +74,7 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
         if (decision!=null)
         switch(decision.getRoutingAction()) {
             case DROP:
+                return Command.CONTINUE;
             case DROP_ALL:
                 return Command.CONTINUE;
         }
@@ -120,12 +121,19 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
                 Server server_src = userDao.findServerByIpAndMac(ip_src, eth_src);
                 Server server_dst = userDao.findServerByIpAndMac(ip_dest, eth_dest);
 
-                action = userRoutingDecision.getAction(user_src, user_dst);
+                User user = (user_src != null) ? user_src: user_dst;
+                Server server = (server_src != null) ? server_src: server_dst;
+
+                if (user == null || server==null ){
+                    action = UserRoutingDecision.UserRoutingAction.DENY;
+                }
+                else {
+                    action = UserRoutingDecision.UserRoutingAction.ALLOW;
+                }
             }
             else {
                 action = UserRoutingDecision.UserRoutingAction.ALLOW;
             }
-
 
             switch (action){
                 case DENY:
