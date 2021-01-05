@@ -179,7 +179,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		// Just IP Spoofing Attack scanner
 
 		if (isIpSpoofingAttack(eth, sw, msg, cntx)){
-				log.info("IPSpoofing detected at {} y {}", new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
+				//log.info("IPSpoofing detected at {} y {}", new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 
 			decision = new RoutingDecision(sw.getId(), inPort,
 					IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
@@ -485,11 +485,11 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 				!device.getIPv4Addresses()[0].equals(ip.getSourceAddress())
 		)
 		{
-			//log.info("IP Spoofing Attack detected: {}", ip.getSourceAddress());
+			log.info("IP Spoofing Attack detected: {}", ip.getSourceAddress());
 			return true;
 		}
 
-		//log.info("Device exists. Not IP Spoofing Attack detected: {}", ip.getSourceAddress());
+		log.info("Device exists. Not IP Spoofing Attack detected: {}", ip.getSourceAddress());
 		return false;
 	}
 
