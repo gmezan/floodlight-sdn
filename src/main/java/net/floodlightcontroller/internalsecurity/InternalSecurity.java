@@ -200,7 +200,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 			decision = new RoutingDecision(sw.getId(), inPort, 
 					IDeviceService.fcStore.get(cntx,IDeviceService.CONTEXT_SRC_DEVICE), 
-					IRoutingDecision.RoutingAction.DROP);
+					IRoutingDecision.RoutingAction.DROP_ALL);
 			decision.addToContext(cntx);
 			return Command.CONTINUE;
 
