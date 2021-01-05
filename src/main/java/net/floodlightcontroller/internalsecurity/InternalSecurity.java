@@ -438,7 +438,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
             //if ((System.currentTimeMillis() - informacion.getStartTime()) > 5000) informacion.setStartTime(System.currentTimeMillis());
 
-			long windowTime = 5000;//System.currentTimeMillis() - informacion.getStartTime(); ////
+			long windowTime = System.currentTimeMillis() - informacion.getStartTime(); ////
 			long metric;
 			if(windowTime == 0)
 				metric= (long)0;
