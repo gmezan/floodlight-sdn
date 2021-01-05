@@ -120,14 +120,14 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
                             IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
                             IRoutingDecision.RoutingAction.DROP);
                     decision.addToContext(cntx);
-                    logger.info("Denying access to flow");
+                    //logger.info("Denying access to flow");
                     break;
                 case ALLOW:
                     decision = new RoutingDecision(sw.getId(), inPort,
                             IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
                             IRoutingDecision.RoutingAction.FORWARD);
                     decision.addToContext(cntx);
-                    logger.info("Allowing access to flow");
+                    //logger.info("Allowing access to flow");
                     break;
                 case BLOCK:
                     break;
