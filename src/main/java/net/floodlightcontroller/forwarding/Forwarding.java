@@ -85,6 +85,12 @@ public class Forwarding extends ForwardingBase implements IFloodlightModule, IOF
 			}
 			int tmp;
 			switch(decision.getRoutingAction()) {
+            case DROP_ALL:
+                doDropAllFlow(sw, pi, decision, cntx);
+                return Command.CONTINUE;
+            case DROP:
+                doDropFlow(sw, pi, decision, cntx);
+                return Command.CONTINUE;
 			case NONE:
 				// don't do anything
 				return Command.CONTINUE;
@@ -96,9 +102,7 @@ public class Forwarding extends ForwardingBase implements IFloodlightModule, IOF
 				// treat as broadcast
 				doFlood(sw, pi, cntx);
 				return Command.CONTINUE;
-			case DROP:
-				doDropFlow(sw, pi, decision, cntx);
-				return Command.CONTINUE;
+
 			case UAC_FORWARD: // TODO: for UAC
 				tmp = FLOWMOD_DEFAULT_IDLE_TIMEOUT;
 				FLOWMOD_DEFAULT_IDLE_TIMEOUT = FLOWMOD_IDLE_TIMEOUT_UAC;
@@ -111,9 +115,6 @@ public class Forwarding extends ForwardingBase implements IFloodlightModule, IOF
 				doDropFlow(sw, pi, decision, cntx);
 				FLOWMOD_DEFAULT_IDLE_TIMEOUT = tmp;
 				return Command.CONTINUE;
-            case DROP_ALL:
-                doDropAllFlow(sw, pi, decision, cntx);
-                return Command.CONTINUE;
 			default:
 				log.error("Unexpected decision made for this packet-in={}", pi, decision.getRoutingAction());
 				return Command.CONTINUE;
@@ -156,8 +157,9 @@ public class Forwarding extends ForwardingBase implements IFloodlightModule, IOF
 
         match.setExact(MatchField.IN_PORT, inPort);
         match.setExact(MatchField.ETH_TYPE, eth.getEtherType());
+        log.info("DROPING PORT SCANNING");
         if(eth.getEtherType().equals(EthType.IPv4)) {
-            log.info("DROPING ALL IP");
+
             IPv4 ip = (IPv4) eth.getPayload();
             match.setExact(MatchField.IPV4_DST, ip.getDestinationAddress());
             match.setExact(MatchField.IPV4_SRC, ip.getSourceAddress());
