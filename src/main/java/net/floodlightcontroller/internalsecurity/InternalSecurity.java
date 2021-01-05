@@ -177,7 +177,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 
 		// Just IP Spoofing Attack scanner
-/*
+
 		if (isIpSpoofingAttack(eth, sw, msg, cntx)){
 				//log.info("IPSpoofing detected at {} y {}", new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 
@@ -187,8 +187,8 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 			decision.addToContext(cntx);
 			return Command.CONTINUE;
 
-		}*/
-
+		}
+/*
 		if (isPortScanningAttack(eth,sw,msg,cntx)){
 				log.info("PortScanning detected at {} y {}", new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 			
@@ -201,7 +201,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 			decision.addToContext(cntx);
 			return Command.CONTINUE;
 
-		}
+		}*/
 
 		if (isMaliciousRequestsAttack(eth)){
 				log.info("MaliciousRequests detected at {} y {}", new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
@@ -488,6 +488,23 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 				OFPort.ZERO);
 
 		IDevice device = it.hasNext()? it.next():null;
+
+		if (device == null){
+		    log.warn("Device is null");
+        }
+		else if (device.getIPv4Addresses().length == 0 ){
+		    log.warn("No device");
+        }
+        else if (device.getIPv4Addresses().length > 1 ){
+            log.warn("More than on device");
+        }
+        else if (!device.getIPv4Addresses()[0].equals(ip.getSourceAddress()))
+        {
+            log.warn("Ip !");
+        }
+        else {
+            log.warn("??????");
+        }
 
 		if (device == null ||
 				(device.getIPv4Addresses().length == 0) ||
