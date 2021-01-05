@@ -30,7 +30,7 @@ setThreshold('udp_reflection_attack', {
     timeout: 2
 });
 
-setEventHandlerUDP(function(evt) {
+setEventHandler(function(evt) {
     logInfo("Event Handler..");
     // don't consider inter-switch links
     var link = topologyInterfaceToLink(evt.agent, evt.dataSource);
@@ -106,7 +106,7 @@ setEventHandlerUDP(function(evt) {
     logInfo("blocking " + evt.flowKey);
 }, ['udp_reflection_attack']);
 
-setEventHandlerTCP(function(evt) {
+setEventHandler(function(evt) {
     logInfo("Event Handler..");
     // don't consider inter-switch links
     var link = topologyInterfaceToLink(evt.agent, evt.dataSource);
@@ -183,8 +183,8 @@ setEventHandlerTCP(function(evt) {
 }, ['tcp_reflection_attack']);
 
 
-window.setTimeOut(setEventHandlerUDP,10000)
-window.setTimeOut(setEventHandlerTCP,10000)
+window.setTimeOut(setEventHandler,10000)
+
 
 
 setIntervalHandler(function() {
