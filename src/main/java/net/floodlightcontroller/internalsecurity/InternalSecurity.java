@@ -57,7 +57,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 	protected Map<MacAddress, PortScanSuspect> macToSuspect; // <Mac origen, PortScanSuspect
 	private boolean isEnabled = false;
-	private Map<String, Map<String,Object[]>> ipDstToData; // Tiene todos los datos para Malicious Request DDoS
+	private Map<String, Map<String,Object[]>> ipDstToData = new HashMap<>(); // Tiene todos los datos para Malicious Request DDoS
 	//[0] para el contador (Integer), [1] para el tiempo (long) 
 
 
@@ -178,7 +178,6 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 		// Just IP Spoofing Attack scanner
 		if (isIpSpoofingAttack(eth, sw, msg, cntx)){
-			if (log.isTraceEnabled())
 				log.info("IPSpoofing detected at {} y {}",
 						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 
@@ -191,7 +190,6 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		}
 		
 		if (isPortScanningAttack(eth,sw,msg,cntx)){
-			if (log.isTraceEnabled())
 				log.info("PortScanning detected at {} y {}",
 						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 			
@@ -203,7 +201,6 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 		}
 		if (isMaliciousRequestsAttack(eth)){
-			if (log.isTraceEnabled())
 				log.info("MaliciousRequests detected at {} y {}",
 						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 			
@@ -442,10 +439,10 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 			
 			if (diferencia > threshold || metric > threshold2 )
 				
-			{ log.info("Port Scanning Attack detected: {}", eth.getSourceMACAddress());
+			{ //log.info("Port Scanning Attack detected: {}", eth.getSourceMACAddress());
 				return true;}
 
-			log.info("No Port Scanning Attack detected: {}",eth.getSourceMACAddress());
+			//log.info("No Port Scanning Attack detected: {}",eth.getSourceMACAddress());
 			return false;
 				
 		}
@@ -475,11 +472,11 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 				!device.getIPv4Addresses()[0].equals(ip.getSourceAddress())
 		)
 		{
-			log.info("IP Spoofing Attack detected: {}", ip.getSourceAddress());
+			//log.info("IP Spoofing Attack detected: {}", ip.getSourceAddress());
 			return true;
 		}
 
-		log.info("Device exists. Not IP Spoofing Attack detected: {}", ip.getSourceAddress());
+		//log.info("Device exists. Not IP Spoofing Attack detected: {}", ip.getSourceAddress());
 		return false;
 	}
 
