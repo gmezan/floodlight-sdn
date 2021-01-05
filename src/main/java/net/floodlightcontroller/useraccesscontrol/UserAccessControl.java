@@ -11,6 +11,8 @@ import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.devicemanager.IDeviceService;
 import net.floodlightcontroller.packet.Ethernet;
 import net.floodlightcontroller.packet.IPv4;
+import net.floodlightcontroller.packet.TCP;
+import net.floodlightcontroller.packet.UDP;
 import net.floodlightcontroller.routing.IRoutingDecision;
 import net.floodlightcontroller.routing.RoutingDecision;
 import net.floodlightcontroller.useraccesscontrol.dao.UserDao;
@@ -24,6 +26,7 @@ import org.projectfloodlight.openflow.protocol.OFVersion;
 import org.projectfloodlight.openflow.protocol.match.MatchField;
 import org.projectfloodlight.openflow.types.EthType;
 import org.projectfloodlight.openflow.types.IPv4Address;
+import org.projectfloodlight.openflow.types.IpProtocol;
 import org.projectfloodlight.openflow.types.OFPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -159,8 +162,28 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
             if (services.isEmpty())
                 return UserRoutingDecision.UserRoutingAction.DENY;
 
+            // So far: server has services for user
 
+            for (Service service : services){
 
+                if (service.getProtocol().equals("UDP")) {
+                    if (ip.getProtocol().equals(IpProtocol.UDP)) {
+                        UDP udp = (UDP) ip.getPayload();
+                        if (Integer.parseInt(udp.getDestinationPort().toString()) == service.getPort()) {
+                            return UserRoutingDecision.UserRoutingAction.ALLOW;
+                        }
+                    }
+                }else {
+                    if (ip.getProtocol().equals(IpProtocol.TCP)) {
+                        TCP tcp = (TCP) ip.getPayload();
+                        if (Integer.parseInt(tcp.getDestinationPort().toString()) == service.getPort()){
+                            return UserRoutingDecision.UserRoutingAction.ALLOW;
+                        }
+                    }
+                }
+
+            }
+            return UserRoutingDecision.UserRoutingAction.DENY;
         }
         action = UserRoutingDecision.UserRoutingAction.ALLOW;
 
