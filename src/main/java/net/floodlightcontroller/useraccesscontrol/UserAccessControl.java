@@ -152,7 +152,7 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
 
     @Override
     public boolean isCallbackOrderingPrereq(OFType type, String name) {
-        return (type.equals(OFType.PACKET_IN) && name.equals("internalsecurity"));
+        return false;
     }
 
     @Override

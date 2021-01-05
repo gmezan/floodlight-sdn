@@ -204,7 +204,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		}
 		*/
 		if (isMaliciousRequestsAttack(eth)){
-				//log.info("MaliciousRequests detected at {} y {}", new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
+				log.info("MaliciousRequests detected at {} y {}", new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 			
 
 			decision = new RoutingDecision(sw.getId(), inPort, 
