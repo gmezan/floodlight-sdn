@@ -393,7 +393,10 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 					}
 					total = total + counter;
 				}
-				borrar.forEach((n) -> ipDstToData.get(Destination).remove(n));
+				for (int i = 0; i < borrar.size(); i++) {
+					ipDstToData.get(Destination).remove(borrar.get(i));
+				}
+				
 				//toma de deciciones
 				if(total > MRA_TRESHOLD_MAX_DST || contador > MRA_TRESHOLD_MAX_SRC) {
 					return true;
