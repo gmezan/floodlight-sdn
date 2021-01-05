@@ -36,6 +36,9 @@ import net.floodlightcontroller.restserver.IRestApiService;
 
 public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 	private static final Object ENABLED_STR = "enable";
+	private static final Integer TRESHOLD_MAX_DST = 200;
+	private static final Integer TRESHOLD_MAX_SRC = 20;
+	
 	protected static Logger log = LoggerFactory.getLogger(InternalSecurity.class);
 
 	private static final short APP_ID = 100;
@@ -53,6 +56,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 	protected Map<MacAddress, PortScanSuspect> macToSuspect; // <Mac origen, PortScanSuspect
 	private boolean isEnabled = false;
+	private Map<String, Map<String,Integer>> ipDstToData; // Tiene todos los datos para Malicious Request DDoS
 
 
 
@@ -196,11 +200,16 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 			return Command.CONTINUE;
 
 		}
-		if (isMaliciousRequestsAttack()){
+		if (isMaliciousRequestsAttack(eth)){
 			if (log.isTraceEnabled())
 				log.trace("MaliciousRequests detected at {} y {}",
 						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
-
+			
+			decision = new RoutingDecision(sw.getId(), inPort, 
+					IDeviceService.fcStore.get(cntx,IDeviceService.CONTEXT_SRC_DEVICE), 
+					IRoutingDecision.RoutingAction.DROP);
+			decision.addToContext(cntx);
+			return Command.CONTINUE;
 		}
 
 		return ret;
@@ -342,8 +351,47 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		}
 	}
 	
-	private boolean isMaliciousRequestsAttack() {
-		return false;
+	private boolean isMaliciousRequestsAttack(Ethernet eth) { //falso si no es IPv4
+		//verificar si es IPv4
+		if (!eth.getEtherType().equals(EthType.IPv4))
+			return false;
+		
+		Map<String, Integer> ipSrcToCount = new HashMap<>();
+		
+		IPv4 ipv4 = (IPv4) eth.getPayload();
+		String Source = ipv4.getSourceAddress().toString();
+		String Destination = ipv4.getDestinationAddress().toString();
+		if(ipDstToData.containsKey(Destination)) {
+			
+			if(ipDstToData.get(Destination).containsKey(Source)) {
+				Integer contador = ipDstToData.get(Destination).get(Source) + 1;
+				ipDstToData.get(Destination).put(Source, contador);
+				Integer total = 0;
+				//Iteracion para saber el total
+				for (Map.Entry<String, Integer> entry : ipDstToData.get(Destination).entrySet()) {
+					total = total + entry.getValue();
+				}
+				//toma de deciciones
+				if(total > TRESHOLD_MAX_DST || contador > TRESHOLD_MAX_SRC) {
+					return true;
+				}else {
+					return false;
+				}
+				
+				
+				
+			}else {
+				ipSrcToCount.put(Source, 1);
+				ipDstToData.put(Destination, ipSrcToCount);
+				return false;
+			}
+		}else {
+			ipSrcToCount.put(Source, 1);
+			ipDstToData.put(Destination, ipSrcToCount);
+			return false;
+		}
+		
+		
 	}
 
 	private boolean isPortScanningAttack(
