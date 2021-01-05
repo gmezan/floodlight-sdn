@@ -134,7 +134,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 	@Override
 	public boolean isCallbackOrderingPostreq(OFType type, String name) {
 		// We need to go before forwarding
-		return (type.equals(OFType.PACKET_IN) && name.equals("useraccesscontrol"));
+		return (type.equals(OFType.PACKET_IN) && name.equals("forwarding"));
 	}
 
 	@Override
