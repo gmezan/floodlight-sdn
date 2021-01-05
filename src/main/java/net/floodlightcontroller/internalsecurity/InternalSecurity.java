@@ -36,8 +36,9 @@ import net.floodlightcontroller.restserver.IRestApiService;
 
 public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 	private static final Object ENABLED_STR = "enable";
-	private static final Integer TRESHOLD_MAX_DST = 200;
-	private static final Integer TRESHOLD_MAX_SRC = 20;
+	private static final Integer MRA_TRESHOLD_MAX_DST = 200;
+	private static final Integer MRA_TRESHOLD_MAX_SRC = 20;
+	private static final Integer MRA_COUNTER_TIMER = 1000;
 	
 	protected static Logger log = LoggerFactory.getLogger(InternalSecurity.class);
 
@@ -56,7 +57,8 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 	protected Map<MacAddress, PortScanSuspect> macToSuspect; // <Mac origen, PortScanSuspect
 	private boolean isEnabled = false;
-	private Map<String, Map<String,Integer>> ipDstToData; // Tiene todos los datos para Malicious Request DDoS
+	private Map<String, Map<String,Object[]>> ipDstToData; // Tiene todos los datos para Malicious Request DDoS
+	//[0] para el contador (Integer), [1] para el tiempo (long) 
 
 
 
@@ -356,7 +358,8 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		if (!eth.getEtherType().equals(EthType.IPv4))
 			return false;
 		
-		Map<String, Integer> ipSrcToCount = new HashMap<>();
+		Object[] arr = new Object[2];
+		Map<String, Object[]> ipSrcToCount = new HashMap<>();
 		
 		IPv4 ipv4 = (IPv4) eth.getPayload();
 		String Source = ipv4.getSourceAddress().toString();
@@ -364,15 +367,35 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		if(ipDstToData.containsKey(Destination)) {
 			
 			if(ipDstToData.get(Destination).containsKey(Source)) {
-				Integer contador = ipDstToData.get(Destination).get(Source) + 1;
-				ipDstToData.get(Destination).put(Source, contador);
+				Integer contador = ((Integer) ipDstToData.get(Destination).get(Source)[0] )+ 1;
+				arr[0] = contador;
+				long tiempo = (long) ipDstToData.get(Destination).get(Source)[1];
+				if(System.currentTimeMillis() - tiempo > MRA_COUNTER_TIMER) {
+					arr[0] = 1;
+				}
+				arr[1] = System.currentTimeMillis();
+				
+				
+				ipDstToData.get(Destination).put(Source,arr);
 				Integer total = 0;
 				//Iteracion para saber el total
-				for (Map.Entry<String, Integer> entry : ipDstToData.get(Destination).entrySet()) {
-					total = total + entry.getValue();
+				ArrayList<String> borrar = new ArrayList<String>();
+				for (Map.Entry<String, Object[]> entry : ipDstToData.get(Destination).entrySet()) {
+					Integer counter = (Integer) entry.getValue()[0];
+					long tiempo1 = (long) entry.getValue()[1];
+					if(System.currentTimeMillis() - tiempo1 > MRA_COUNTER_TIMER) {
+						if(entry.getKey().compareTo(Source)==0) {
+							counter = 1;
+						}else {
+							counter = 0;
+							borrar.add(entry.getKey());
+						}
+					}
+					total = total + counter;
 				}
+				borrar.forEach((n) -> ipDstToData.get(Destination).remove(n));
 				//toma de deciciones
-				if(total > TRESHOLD_MAX_DST || contador > TRESHOLD_MAX_SRC) {
+				if(total > MRA_TRESHOLD_MAX_DST || contador > MRA_TRESHOLD_MAX_SRC) {
 					return true;
 				}else {
 					return false;
@@ -381,12 +404,15 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 				
 				
 			}else {
-				ipSrcToCount.put(Source, 1);
-				ipDstToData.put(Destination, ipSrcToCount);
+				arr[0] = 1;
+				arr[1] = System.currentTimeMillis();
+				ipDstToData.get(Destination).put(Source, arr);
 				return false;
 			}
 		}else {
-			ipSrcToCount.put(Source, 1);
+			arr[0] = 1;
+			arr[1] = System.currentTimeMillis();
+			ipSrcToCount.put(Source, arr);
 			ipDstToData.put(Destination, ipSrcToCount);
 			return false;
 		}
