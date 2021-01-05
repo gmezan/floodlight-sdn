@@ -38,7 +38,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 	private static final Object ENABLED_STR = "enable";
 	private static final Integer MRA_TRESHOLD_MAX_DST = 200;
 	private static final Integer MRA_TRESHOLD_MAX_SRC = 20;
-	private static final Integer MRA_COUNTER_TIMER = 1000;
+	private static final Integer MRA_COUNTER_TIMER = 5000; //ms
 	
 	protected static Logger log = LoggerFactory.getLogger(InternalSecurity.class);
 
@@ -179,7 +179,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		// Just IP Spoofing Attack scanner
 		if (isIpSpoofingAttack(eth, sw, msg, cntx)){
 			if (log.isTraceEnabled())
-				log.trace("IPSpoofing detected at {} y {}",
+				log.info("IPSpoofing detected at {} y {}",
 						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 
 			decision = new RoutingDecision(sw.getId(), inPort,
@@ -192,7 +192,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		
 		if (isPortScanningAttack(eth,sw,msg,cntx)){
 			if (log.isTraceEnabled())
-				log.trace("PortScanning detected at {} y {}",
+				log.info("PortScanning detected at {} y {}",
 						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 			
 			decision = new RoutingDecision(sw.getId(), inPort, 
@@ -204,7 +204,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		}
 		if (isMaliciousRequestsAttack(eth)){
 			if (log.isTraceEnabled())
-				log.trace("MaliciousRequests detected at {} y {}",
+				log.info("MaliciousRequests detected at {} y {}",
 						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 			
 			decision = new RoutingDecision(sw.getId(), inPort, 
