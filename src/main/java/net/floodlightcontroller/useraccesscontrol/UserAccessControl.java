@@ -32,7 +32,7 @@ import java.util.Collection;
 import java.util.Map;
 
 public class UserAccessControl implements IOFMessageListener, IFloodlightModule {
-
+    private static final Object ENABLED_STR = "enable";
     protected IFloodlightProviderService floodlightProvider;
     protected static Logger logger;
     protected UserDao userDao;
@@ -41,10 +41,16 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
     public static final int FLOWMOD_IDLE_TIMEOUT_UAC = 30;
     public static final int FLOWMOD_HARD_TIMEOUT_UAC = 30;
 
+    private boolean isEnabled = false;
+
     protected IPv4Address subnet_mask = IPv4Address.of("255.255.255.0");
 
     @Override
     public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
+        if (!this.isEnabled) {
+            return Command.CONTINUE;
+        }
+
         switch (msg.getType()) {
             case PACKET_IN:
                 IRoutingDecision decision = null;
@@ -126,16 +132,16 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
                 case DENY:
                     decision = new RoutingDecision(sw.getId(), inPort,
                             IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
-                            IRoutingDecision.RoutingAction.DROP);
+                            IRoutingDecision.RoutingAction.FORWARD);
                     decision.addToContext(cntx);
-                    //logger.info("Denying access to flow from {} to {}", "("+ip_src+","+eth_src+")", "("+ip_dest+","+ eth_dest+")");
+                    logger.info("Denying access to flow from {} to {}", "("+ip_src+","+eth_src+")", "("+ip_dest+","+ eth_dest+")");
                     break;
                 case ALLOW:
                     decision = new RoutingDecision(sw.getId(), inPort,
                             IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
-                            IRoutingDecision.RoutingAction.FORWARD);
+                            IRoutingDecision.RoutingAction.DROP);
                     decision.addToContext(cntx);
-                    //logger.info("Allowing access to flow from {} to {}", "("+ip_src+","+eth_src+")", "("+ip_dest+","+ eth_dest+")");
+                    logger.info("Allowing access to flow from {} to {}", "("+ip_src+","+eth_src+")", "("+ip_dest+","+ eth_dest+")");
                     break;
                 case BLOCK:
                     break;
@@ -152,7 +158,7 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
 
     @Override
     public boolean isCallbackOrderingPrereq(OFType type, String name) {
-        return (type.equals(OFType.PACKET_IN) && name.equals("internalsecurity"));
+        return false;
     }
 
     @Override
@@ -184,6 +190,18 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
         logger = LoggerFactory.getLogger(UserAccessControl.class);
         userRoutingDecision = new UserRoutingDecision();
         userDao = new UserDao();
+
+        Map<String, String> config = context.getConfigParams(this);
+
+        if (config.containsKey(ENABLED_STR)) {
+            try {
+                isEnabled = Boolean.parseBoolean(config.get(ENABLED_STR).trim());
+            } catch (Exception e) {
+                logger.error("Could not parse '{}'. Using default of {}", ENABLED_STR, isEnabled);
+            }
+        }
+        logger.info("User Access Control {}", isEnabled ? "enabled" : "disabled");
+
     }
 
     @Override

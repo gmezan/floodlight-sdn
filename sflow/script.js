@@ -19,8 +19,8 @@ setThreshold('tcp_reflection_attack', {
 }) 
 
 setFlow('tcp_reflection', {
-	keys: 'ipdestination , tcpsourceport',
-	value: 'frames2'
+	keys: 'ipdestination,tcpsourceport',
+	value: 'frames'
 });
 
 setThreshold('udp_reflection_attack', {
@@ -34,12 +34,11 @@ setEventHandler(function(evt) {
     logInfo("Event Handler..");
     // don't consider inter-switch links
     var link = topologyInterfaceToLink(evt.agent, evt.dataSource);
-    logInfo("link: " + link);
     if (link) return;
 
     // get port information
     var port = topologyInterfaceToPort(evt.agent, evt.dataSource);
-    logInfo("port: " + port);
+
     if (!port) return;
 
     // DPID formatting
@@ -64,12 +63,10 @@ setEventHandler(function(evt) {
     if (!port.dpid || !port.ofport) return;
 
     // we already have a control for this flow
-    logInfo(controls[evt.flowKey]);
     if (controls[evt.flowKey]) return;
 
     var [ipdestination, udpsourceport] = evt.flowKey.split(',');
 
-    logInfo(flow);
     var flow = {
         switch: port.dpid,
         name: "flow_for_mitigate",
@@ -77,11 +74,10 @@ setEventHandler(function(evt) {
         in_port: port.ofport,
         eth_type: "0x800",
         ipv4_dst: ipdestination + "/32",
-        ip_proto: "17",
+        ip_proto: "6 || 17",
         active: true
     };
    
-    logInfo(flow.switch);
 
     var resp = http2({
         url: 'http://' + floodlight + ':8080/wm/staticflowpusher/json',
@@ -104,8 +100,9 @@ setEventHandler(function(evt) {
     };
 
     logInfo("blocking " + evt.flowKey);
-}, ['udp_reflection_attack']);
+}, ['udp_reflection_attack', 'tcp_reflection_attack']);
 
+/*
 setEventHandler(function(evt) {
     logInfo("Event Handler..");
     // don't consider inter-switch links
@@ -181,9 +178,9 @@ setEventHandler(function(evt) {
 
     logInfo("blocking " + evt.flowKey);
 }, ['tcp_reflection_attack']);
+*/
 
-
-window.setTimeOut(setEventHandler,10000)
+//window.setTimeOut(setEventHandler,10000)
 
 
 
