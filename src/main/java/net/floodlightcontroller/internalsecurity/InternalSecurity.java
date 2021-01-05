@@ -436,7 +436,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		
 			
 			
-			if ((System.currentTimeMillis() - macToSuspect.get(eth.getSourceMACAddress()).getData().getStartTime()) > 1800) {
+			if ((System.currentTimeMillis() - macToSuspect.get(eth.getSourceMACAddress()).getData().getStartTime()) > 200) {
 				 macToSuspect.get(eth.getSourceMACAddress()).getData().setStartTime(System.currentTimeMillis());
 				 macToSuspect.get(eth.getSourceMACAddress()).getData().setSynCounter(0);
 				 macToSuspect.get(eth.getSourceMACAddress()).getData().setSynAckCounter(0);
