@@ -435,8 +435,10 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 			int contadorACK = informacion.getSynAckCounter(); 
 			int diferencia = contadorSYN - contadorACK; 
 			int threshold = 5; // MODIFICAR
-			
-			long windowTime = System.currentTimeMillis() - informacion.getStartTime(); //// 
+
+            //if ((System.currentTimeMillis() - informacion.getStartTime()) > 5000) informacion.setStartTime(System.currentTimeMillis());
+
+			long windowTime = 5000;//System.currentTimeMillis() - informacion.getStartTime(); ////
 			long metric;
 			if(windowTime == 0)
 				metric= (long)0;
@@ -452,8 +454,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 				return true;
 			}
 
-			if ((System.currentTimeMillis() - informacion.getStartTime()) > 5000)
-			    informacion.setStartTime(System.currentTimeMillis());
+
 			//log.info("No Port Scanning Attack detected: {}",eth.getSourceMACAddress());
 			return false;
 				
