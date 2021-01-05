@@ -74,10 +74,12 @@ setEventHandler(function(evt) {
         in_port: port.ofport,
         eth_type: "0x800",
         ipv4_dst: ipdestination + "/32",
-        ip_proto: "6 || 17",
+        ip_proto: "17",
         idle_timeout: 10,
         active: true
     };
+
+    logInfo(flow);
    
 
     var resp = http2({
