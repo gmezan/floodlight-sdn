@@ -22,8 +22,24 @@ setEventHandler(function(evt) {
     logInfo("port: " + port);
     if(!port) return;
 
+   if (!port.dpid.includes(":")) { 
+      var aux = "";
+      var count = 0;
+      for (var i = 0; i < port.dpid.length; i++) {
+         aux += port.dpid.charAt(i);
+         if (count === 1 && (i !== (port.dpid.length-1))) {
+            count = 0;
+            aux += ":";
+         } else {
+            count += 1;
+         }
+      }
+      port.dpid = aux.trim();
+   }
+
     // need OpenFlow info to create Ryu filtering rule
     logInfo("port.dpid: " + port.dpid +"\nport.ofport: "+ port.ofport);
+
     if(!port.dpid || !port.ofport) return;
 
     // we already have a control for this flow
@@ -32,6 +48,7 @@ setEventHandler(function(evt) {
 
     var [ipdestination,udpsourceport] = evt.flowKey.split(',');
 
+    logInfo(flow);
     var flow = {
        switch: port.dpid,
        name: "flow_for_mitigate",
