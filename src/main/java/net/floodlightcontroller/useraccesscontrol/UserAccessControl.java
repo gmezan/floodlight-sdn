@@ -162,6 +162,9 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
             if (services.isEmpty())
                 return UserRoutingDecision.UserRoutingAction.DENY;
 
+            if (ip.getSourceAddress().toString().equals(server.getIp()))
+                return UserRoutingDecision.UserRoutingAction.ALLOW;
+
             // So far: server has services for user
 
             for (Service service : services){
