@@ -190,7 +190,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		}
 */		
 		if (isPortScanningAttack(eth,sw,msg,cntx)){
-				log.info("PortScanning detected at {} y {}", new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
+				//log.info("PortScanning detected at {} y {}", new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 			
 			/*
 				Bloquear todo el tráfico del source 
@@ -198,7 +198,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 			decision = new RoutingDecision(sw.getId(), inPort, 
 					IDeviceService.fcStore.get(cntx,IDeviceService.CONTEXT_SRC_DEVICE), 
-					IRoutingDecision.RoutingAction.DROP_ALL);
+					IRoutingDecision.RoutingAction.DROP);
 			decision.addToContext(cntx);
 			return Command.CONTINUE;
 
