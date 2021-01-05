@@ -168,7 +168,7 @@ public class Forwarding extends ForwardingBase implements IFloodlightModule, IOF
         match.setExact(MatchField.ETH_SRC, eth.getSourceMACAddress());
 
         flow.setHardTimeout(0);
-        flow.setIdleTimeout(30);
+        flow.setIdleTimeout(10);
         flow.setMatch(match.build());
         flow.setPriority(32767);
 

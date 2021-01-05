@@ -449,8 +449,11 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 			if (diferencia > threshold || metric > threshold2 )
 			{ //log.info("Port Scanning Attack detected: {}", eth.getSourceMACAddress());
-				return true;}
+				return true;
+			}
 
+			if ((System.currentTimeMillis() - informacion.getStartTime()) > 5000)
+			    informacion.setStartTime(System.currentTimeMillis());
 			//log.info("No Port Scanning Attack detected: {}",eth.getSourceMACAddress());
 			return false;
 				
