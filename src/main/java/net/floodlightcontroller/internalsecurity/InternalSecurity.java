@@ -190,7 +190,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 		}
 */		
 		if (isPortScanningAttack(eth,sw,msg,cntx)){
-				//log.info("PortScanning detected at {} y {}", new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
+				log.info("PortScanning detected at {} y {}", new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
 			
 			/*
 				Bloquear todo el tráfico del source 
