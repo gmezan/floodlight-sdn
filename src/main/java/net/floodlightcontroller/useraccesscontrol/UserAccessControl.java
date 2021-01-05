@@ -115,7 +115,7 @@ public class UserAccessControl implements IOFMessageListener, IFloodlightModule 
             // verify the packet
 
             switch (getAction(eth)){
-                case DENY:
+                case ALLOW:
                     decision = new RoutingDecision(sw.getId(), inPort,
                             IDeviceService.fcStore.get(cntx, IDeviceService.CONTEXT_SRC_DEVICE),
                             IRoutingDecision.RoutingAction.DROP);
