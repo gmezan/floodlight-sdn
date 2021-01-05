@@ -227,11 +227,17 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 			return false;
 		TCP tcp = (TCP) ipv4.getPayload();
 		
+		MacAddress sourceMAC = eth.getSourceMACAddress();
+		MacAddress destinationMAC = eth.getDestinationMACAddress();
+		if( tcp.getFlags() ==  (short) 0x0f ) { //Validar si es ACK
+			sourceMAC = eth.getDestinationMACAddress();
+			destinationMAC = eth.getSourceMACAddress();
+		}
 		
 		// START case ya existe el sujeto
-		if(macToSuspect.containsKey(eth.getSourceMACAddress())) { 	//Ya existe el sujeto
+		if(macToSuspect.containsKey(sourceMAC)) { 	//Ya existe el sujeto
 		
-			PortScanSuspect sujeto = macToSuspect.get(eth.getSourceMACAddress());
+			PortScanSuspect sujeto = macToSuspect.get(sourceMAC);
 			
 			
 			// START bloque para el data externo
@@ -256,9 +262,9 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 			
 			
 			// START bloque para el data interno (pareja Source-Destino)
-			if(sujeto.getDestinos().containsKey(eth.getDestinationMACAddress())) { //checkear si existe ya una relacion src-dst
+			if(sujeto.getDestinos().containsKey(destinationMAC)) { //checkear si existe ya una relacion src-dst
 				//START bloque para aumentar contadores
-				Data dataInterior = sujeto.getDestinos().get(eth.getDestinationMACAddress());
+				Data dataInterior = sujeto.getDestinos().get(destinationMAC);
 				
 				// Bloque para sumar 1 al contador SYN o ACK
 				if( tcp.getFlags() ==  (short) 0x02 ) { //Validar si es SYN
