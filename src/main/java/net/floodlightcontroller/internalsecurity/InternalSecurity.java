@@ -444,9 +444,11 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 				metric = contadorSYN/windowTime;
 
 			int threshold2 = 20; // MODIFICAR 
-			
+
+            log.info("metric: {}, windowtime: {}", metric, windowTime);
+
 			if (diferencia > threshold || metric > threshold2 )
-				
+
 			{ //log.info("Port Scanning Attack detected: {}", eth.getSourceMACAddress());
 				return true;}
 
