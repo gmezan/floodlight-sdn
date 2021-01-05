@@ -177,6 +177,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 
 
 		// Just IP Spoofing Attack scanner
+		/*
 		if (isIpSpoofingAttack(eth, sw, msg, cntx)){
 				log.info("IPSpoofing detected at {} y {}",
 						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
@@ -188,7 +189,7 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 			return Command.CONTINUE;
 
 		}
-		
+*/		
 		if (isPortScanningAttack(eth,sw,msg,cntx)){
 				log.info("PortScanning detected at {} y {}",
 						new Object[] {eth.getSourceMACAddress(), eth.getDestinationMACAddress()});
@@ -434,7 +435,11 @@ public class InternalSecurity implements IFloodlightModule, IOFMessageListener {
 			int threshold = 5; // MODIFICAR
 			
 			long windowTime = System.currentTimeMillis() - informacion.getStartTime(); //// 
-			long metric = windowTime/contadorSYN;
+			if(windowTime == 0)
+				long metric = (long)0;
+			else
+				long metric = contadorSYN/windowTime;
+
 			int threshold2 = 20; // MODIFICAR 
 			
 			if (diferencia > threshold || metric > threshold2 )
