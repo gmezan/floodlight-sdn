@@ -19,8 +19,8 @@ setThreshold('tcp_reflection_attack', {
 }) 
 
 setFlow('tcp_reflection', {
-	keys: 'ipdestination , tcpsourceport',
-	value: 'frames2'
+	keys: 'ipdestination,tcpsourceport',
+	value: 'frames'
 });
 
 setThreshold('udp_reflection_attack', {
