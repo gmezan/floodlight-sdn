@@ -23,7 +23,7 @@ setEventHandler(function(evt) {
     if(!port) return;
 
     // need OpenFlow info to create Ryu filtering rule
-    logInfo("port.dpid: " + port.dpid +"\nport.ofport: "+ port.ofport);
+    logInfo("port.dpid: " + port.dpid +"\nport.ofport: "+ port.ofport+"\n" + parseInt(port.dpid,16));
     if(!port.dpid || !port.ofport) return;
 
     // we already have a control for this flow
