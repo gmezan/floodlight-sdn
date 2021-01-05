@@ -180,7 +180,7 @@ setEventHandler(function(evt) {
 }, ['tcp_reflection_attack']);
 */
 
-window.setTimeOut(setEventHandler,10000)
+//window.setTimeOut(setEventHandler,10000)
 
 
 
